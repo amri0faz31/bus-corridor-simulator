@@ -7,40 +7,43 @@
   <link rel="stylesheet" href="style.css">
   <script defer src="simulation.js"></script>
   <script defer src="reference.js"></script>
+  <script defer src="time-distance.js"></script>
   <script defer src="demo.js"></script>
 </head>
 <body>
   <main>
     <header>
-      <p class="eyebrow">URBAN TRANSIT SIMULATION</p>
       <h1>Bus Corridor Simulator</h1>
-      <p>Follow three focal buses through a ten-bus corridor. Compare immediate departures with capped holding before Market.</p>
+      <p>Watch how holding before Market changes bus queues and passenger travel times.</p>
     </header>
 
-    <section class="controls" aria-label="Experiment controls">
-      <div class="fields">
-        <label for="demand">Passenger demand
-          <select id="demand"><option value="reference" disabled hidden>Fixed reference</option><option value="0.60">Low · 0.60×</option><option value="1" selected>Medium · 1×</option><option value="1.75">High · 1.75×</option></select>
-        </label>
-        <label for="variability">Travel-time variability
-          <select id="variability"><option value="reference" disabled hidden>Fixed reference</option><option value="0.15">Low · CV 0.15</option><option value="0.45">High · CV 0.45</option></select>
-        </label>
-        <label for="cap">Maximum hold
-          <select id="cap"><option value="0">0 seconds</option><option value="10">10 seconds</option><option value="20" selected>20 seconds</option><option value="40">40 seconds</option></select>
-        </label>
-        <label for="speed">Playback speed
-          <select id="speed"><option value="1">1× · real time</option><option value="5" selected>5×</option><option value="20">20×</option></select>
-        </label>
-        <label for="vehicle-view">Buses shown
-          <select id="vehicle-view"><option value="focus" selected>Focus · buses 3–5</option><option value="all">All ten buses</option></select>
-        </label>
-      </div>
+    <section class="controls" aria-label="Playback and scenario controls">
       <div class="actions">
         <button id="start" class="primary" type="button">Start</button>
         <button id="pause" type="button">Pause</button>
         <button id="reset" type="button">Reset</button>
-        <button id="reference" type="button">Load notebook reference</button>
+        <label for="speed">Speed
+          <select id="speed"><option value="1">1× · real time</option><option value="5" selected>5×</option><option value="20">20×</option></select>
+        </label>
       </div>
+      <details class="options">
+        <summary>Scenario options</summary>
+        <div class="fields">
+          <label for="demand">Passenger demand
+            <select id="demand"><option value="reference" disabled hidden>Fixed reference</option><option value="0.60">Low · 0.60×</option><option value="1" selected>Medium · 1×</option><option value="1.75">High · 1.75×</option></select>
+          </label>
+          <label for="variability">Travel-time variability
+            <select id="variability"><option value="reference" disabled hidden>Fixed reference</option><option value="0.15">Low · CV 0.15</option><option value="0.45">High · CV 0.45</option></select>
+          </label>
+          <label for="cap">Maximum hold
+            <select id="cap"><option value="0">0 seconds</option><option value="10">10 seconds</option><option value="20" selected>20 seconds</option><option value="40">40 seconds</option></select>
+          </label>
+          <label for="vehicle-view">Buses shown
+            <select id="vehicle-view"><option value="focus" selected>Buses 3–5</option><option value="all">All ten buses</option></select>
+          </label>
+        </div>
+        <button id="reference" type="button">Load notebook reference</button>
+      </details>
     </section>
 
     <section aria-label="Live simulations">
@@ -48,17 +51,17 @@
       <div class="timeline">
         <label for="seek">Jump to time</label>
         <input type="range" id="seek" min="0" max="0" step="any" value="0">
-        <output id="clock" for="seek">0:00</output>
+        <output id="clock" for="seek" aria-live="off">0:00</output>
       </div>
+      <p class="legend"><span class="legend-holding">Holding before Market</span><span class="legend-waiting">Waiting for a berth</span></p>
       <div id="lanes"></div>
-      <p class="caption">The focus view hides seven markers. The model and live averages still include all buses and all completed trips. Both panels start from the same passenger and travel-time inputs.</p>
+      <p class="caption">The default view shows buses 3–5. Passenger averages include completed trips from all ten buses.</p>
     </section>
 
-    <details open>
-      <summary>About and how to use</summary>
-      <p>Both panels share a clock. At 1×, one real second advances the clock by one simulated second. Use the timeline to jump to a later bus or a stop event. The holding policy tries for an 80-second release gap before Market.</p>
-      <p>Circles are buses. A ring marks one waiting for the Market berth. An orange circle marks a bus waiting at the control point. The chart position between stops is interpolated from event timestamps.</p>
-      <p>Use <strong>Load notebook reference</strong> to replay the exact deterministic disruption from the notebook. The reference check compares completed trips and recorded timings. The random preview uses one browser-seeded run. The notebook uses repeated paired runs for confidence intervals.</p>
+    <details>
+      <summary>About these runs</summary>
+      <p>Both policies use the same bus schedule, passengers and road travel times. At 1×, one real second advances the clock by one simulated second. In the notebook example, Bus 3 starts at 2:40.</p>
+      <p>Holding aims for an 80-second release gap before Market. Both kinds of wait appear at Market’s distance because the model treats the approach and berth as one location on the route.</p>
     </details>
   </main>
 </body>

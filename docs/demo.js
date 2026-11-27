@@ -7,6 +7,7 @@ const focalBuses = new Set([2, 3, 4]); // Zero-based indices for buses 3–5.
 let lanes = [];
 let elapsed = 0;
 let duration = 0;
+let axisMinutes = 0;
 let frame = 0;
 let playing = false;
 let previousFrame = 0;
@@ -14,58 +15,25 @@ let previousFrame = 0;
 function makeLane(label, run) {
   const section = document.createElement("section");
   section.className = "lane";
-  section.innerHTML = '<h2></h2><p class="finish"></p><div class="road" aria-hidden="true"><div class="track"></div></div>'
+  section.innerHTML = '<h2></h2><p class="finish" aria-live="polite"></p><canvas class="time-distance" role="img"></canvas>'
+    + '<p class="wait-status"></p>'
     + '<dl class="stats"><div><dt>Mean platform wait</dt><dd data-metric="platform_wait">—</dd></div>'
     + '<div><dt>Mean journey time</dt><dd data-metric="journey_time">—</dd></div>'
     + '<div><dt>Completed trips</dt><dd data-metric="completed">0</dd></div></dl>'
     + '<p class="focus-detail"></p>';
   section.querySelector("h2").textContent = label;
-  const road = section.querySelector(".road");
-  model.stops.forEach((name, i) => {
-    const stop = document.createElement("span");
-    stop.className = "stop";
-    stop.textContent = name;
-    stop.style.left = percent(model.distance[i]);
-    if (i === 0) stop.style.transform = "none";
-    if (i === model.stops.length - 1) stop.style.transform = "translateX(-100%)";
-    road.append(stop);
-  });
-  const markers = run.visits.map((_, i) => {
-    const marker = document.createElement("span");
-    marker.className = "bus";
-    marker.textContent = i + 1;
-    road.append(marker);
-    return marker;
-  });
+  const chart = section.querySelector("canvas");
+  chart.setAttribute("aria-label", label + ". Bus positions by time and distance, from Origin to Terminal.");
   const market = run.visits[4][1];
   const upstream = market.arrival - market.approach;
   const berthWait = market.serviceStart - market.arrival;
   section.querySelector(".focus-detail").textContent =
-    "Bus 5 at Market · " + upstream.toFixed(1) + " s at control · " + berthWait.toFixed(1) + " s waiting for berth";
+    "Bus 5 at Market · " + upstream.toFixed(1) + " s before the stop · " + berthWait.toFixed(1) + " s waiting for a berth";
   $("lanes").append(section);
-  return { run, section, markers, finish: section.querySelector(".finish") };
-}
-
-function percent(km) {
-  return (100 * km / model.distance.at(-1)) + "%";
-}
-
-function position(bus, time) {
-  if (time < bus[0].arrival || time > bus.at(-1).departure) return null;
-  for (let i = 0; i < bus.length; i += 1) {
-    const visit = bus[i];
-    if (i > 0 && time < visit.approach) {
-      const before = bus[i - 1].departure;
-      const fraction = (time - before) / (visit.approach - before);
-      const km = model.distance[i - 1] + fraction * (model.distance[i] - model.distance[i - 1]);
-      return { km, state: "moving" };
-    }
-    if (time <= visit.departure) {
-      const state = time < visit.arrival ? "holding" : time < visit.serviceStart ? "waiting" : "boarding";
-      return { km: model.distance[i] - (state === "holding" ? 0.11 : 0), state };
-    }
-  }
-  return null;
+  return {
+    run, chart, tracks: run.visits.map(busTrack), finish: section.querySelector(".finish"),
+    waitStatus: section.querySelector(".wait-status"), metrics: section.querySelectorAll("[data-metric]"),
+  };
 }
 
 function formatTime(time, tenths = false) {
@@ -77,26 +45,19 @@ function formatTime(time, tenths = false) {
 function draw() {
   $("clock").textContent = formatTime(elapsed);
   $("seek").value = elapsed;
-  for (const { run, section, markers, finish } of lanes) {
+  const focusOnly = $("vehicle-view").value === "focus";
+  for (const { run, chart, tracks, finish, waitStatus, metrics } of lanes) {
     const finishText = elapsed >= run.end ? "Last bus finished at " + formatTime(run.end, true) : "Last bus finish · —";
     if (finish.textContent !== finishText) finish.textContent = finishText;
-    run.visits.forEach((bus, i) => {
-      const focusOnly = $("vehicle-view").value === "focus";
-      const location = !focusOnly || focalBuses.has(i) ? position(bus, elapsed) : null;
-      const marker = markers[i];
-      marker.hidden = !location;
-      marker.style.display = location ? "" : "none";
-      if (location) {
-        marker.style.left = percent(location.km);
-        marker.style.top = (2 + 15 * (i % 3)) + "px";
-        marker.className = "bus " + location.state;
-      }
-    });
-    const metrics = model.metrics(run, elapsed);
-    for (const target of section.querySelectorAll("[data-metric]")) {
-      const value = metrics[target.dataset.metric];
-      target.textContent = target.dataset.metric === "completed" ? value
+    const shown = focusOnly ? tracks.filter((_, i) => focalBuses.has(i)) : tracks;
+    const waitText = drawTimeDistance(chart, shown, elapsed, axisMinutes).join(" · ");
+    if (waitStatus.textContent !== waitText) waitStatus.textContent = waitText;
+    const measured = model.metrics(run, elapsed);
+    for (const target of metrics) {
+      const value = measured[target.dataset.metric];
+      const label = target.dataset.metric === "completed" ? String(value)
         : value === null ? "—" : value.toFixed(2) + " s";
+      if (target.textContent !== label) target.textContent = label;
     }
   }
 }
@@ -134,6 +95,7 @@ function prepare(useReference) {
     const heldLabel = cap === 0 ? "Holding off (0 s cap)" : "Hold up to " + cap + " s";
     lanes = [makeLane("No holding", runs[0]), makeLane(heldLabel, runs[1])];
     duration = Math.max(...runs.map(run => run.end));
+    axisMinutes = 5 * Math.ceil(duration / 300);
     $("seek").max = duration;
     resetTime();
     $("scenario").textContent = useReference ? referenceStatus(runs) : "Sample run · seed 42";
@@ -194,3 +156,4 @@ $("reference").addEventListener("click", () => prepare(true));
 for (const id of controls) $(id).addEventListener("change", () => prepare(false));
 prepare(true);
 $("vehicle-view").addEventListener("change", draw);
+window.addEventListener("resize", draw);
