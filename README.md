@@ -18,7 +18,7 @@ Open [the notebook](notebook/bus-corridor-simulator.ipynb) in Google Colab via *
 
 ## Verification
 
-The one-berth fixture checks a 20-second bus wait and FIFO ordering when a berth releases at the same time a bus arrives. A second hand calculation verifies two complete passenger journeys and two consecutive berth queues. The same engine runs both checks and the six-stop example. A separate test checks the cap and FIFO holding queue. A zero cap reproduces both original runs exactly.
+The one-berth fixture checks a 20-second bus wait and FIFO ordering when a berth releases at the same time a bus arrives. A second hand calculation verifies two complete passenger journeys and two consecutive berth queues. The same engine runs both checks and the six-stop example. A separate test checks the cap and FIFO holding queue. A zero cap reproduces both original runs exactly. The common engine also passes analytical M/M/1 and fixed-headway waiting checks. See the [verification table and delay accounting](VERIFICATION.md).
 
 ## Model and concepts applied
 
@@ -32,7 +32,7 @@ With the same road delay, Bus 5 spends 57.9 s waiting for the Market berth with 
 
 ![Capped holding comparison under the same road disruption](figures/holding-comparison.png)
 
-The next experiment repeats this comparison across matched random inputs and reports confidence intervals.
+The [experiment specification](EXPERIMENT_PLAN.md) defines matched comparisons of no holding, capped holding and a two-bay Market stop. The notebook currently includes the analytical checks and baseline-only input pilots.
 
 ## Browser
 

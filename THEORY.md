@@ -37,6 +37,11 @@ The reference policy uses an 80-second target and a 20-second cap. Both fixed-in
 | One berth | Hand trace: 20 s bus wait and correct FIFO order at an exact timestamp tie. |
 | Three-stop reference | Hand trace: 74 s and 44 s passenger journeys, 0 s and 2 s platform waits, and a bus queuing at two consecutive stops. |
 | Six-stop corridor | Report total completed trips, passenger platform and journey time, and bus berth waiting. Compare nominal service with a 100 s road delay to Bus 4 on the first link. Use the same input cohort and dispatches. |
-| Random arrivals and running times | Draw exponential inter-arrivals via inverse transform and positive lognormal running times. Check the M/M/1 and fixed-headway passenger benchmarks under their own assumptions. |
+| Random arrivals and running times | Exponential passenger inter-arrivals and positive lognormal running times are seeded. The M/M/1 and fixed-headway checks run through the common engine under their own assumptions. |
 | Departure policy | Four-bus hand trace checks first release, short and long headways, maximum hold and queueing. A zero cap must reproduce both original runs. |
 | Policy comparison | Use common inputs within policy pairs and separate seeds across pairs. Evaluate paired differences in journey time and platform wait with 95% intervals across demand and travel-time variability. |
+
+
+Incoming link records separate sampled road running time, any imposed road shock and extra no-passing time. Stop records separate berth waiting and dwell. Control records separate waiting for the holding point from the deliberate hold. The passenger ledger includes the boarding and intermediate dwells and ends at the start of destination alighting. A run that ends with unfinished passengers raises an error.
+
+See the executed [verification evidence](VERIFICATION.md) and the [experiment specification](EXPERIMENT_PLAN.md) for the two-bay assumptions, baseline pilots, cohort and paired comparison design.
