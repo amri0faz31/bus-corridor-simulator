@@ -18,7 +18,7 @@ Open [the notebook](notebook/bus-corridor-simulator.ipynb) in Google Colab via *
 
 ## Verification
 
-The one-berth fixture checks a 20-second bus wait and FIFO ordering when a berth releases at the same time a bus arrives. A second hand calculation verifies two complete passenger journeys and two consecutive berth queues. Both checks run on the same simulation engine as the six-stop example.
+The one-berth fixture checks a 20-second bus wait and FIFO ordering when a berth releases at the same time a bus arrives. A second hand calculation verifies two complete passenger journeys and two consecutive berth queues. The same engine runs both checks and the six-stop example. A separate test checks the cap and FIFO holding queue. A zero cap reproduces both original runs exactly.
 
 ## Model and concepts applied
 
@@ -26,7 +26,13 @@ A next-event clock handles movements, berth ownership and passenger queues. Stop
 
 ## Results and next stage
 
-In the reference run, the 100-second delay raises mean platform wait from 64.6 to 83.7 seconds across the same 296 passengers. Bus 5 queues for 57.9 seconds at Market. Mean passenger journey time rises from 327.8 to 382.2 seconds. The reference run is deterministic. The policy experiment will add matched random inputs, capped upstream releases and replication-based confidence intervals.
+In the reference run, the 100-second delay raises mean platform wait from 64.6 to 83.7 seconds across the same 296 passengers. Bus 5 queues for 57.9 seconds at Market. Mean passenger journey time rises from 327.8 to 382.2 seconds. The reference run is deterministic.
+
+With the same road delay, Bus 5 spends 57.9 s waiting for the Market berth with immediate release and 37.9 s with the cap. The controller holds that bus for 20.0 s. Across the same 296 passengers, mean platform wait is 83.74 s without holding and 84.28 s with the cap. Mean journey times are 382.18 s and 382.63 s, respectively. These are results for one fixed scenario.
+
+![Capped holding comparison under the same road disruption](figures/holding-comparison.png)
+
+The next experiment repeats this comparison across matched random inputs and reports confidence intervals.
 
 ## Browser
 

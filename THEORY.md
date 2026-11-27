@@ -20,7 +20,17 @@ The reference values 5.264 s fixed, 2.136 s per boarding and 1.503 s per alighti
 - Passenger platform waiting = boarding − passenger arrival.
 - Passenger journey time = alighting − passenger arrival, including platform wait.
 
-## 3. Evidence and experiment progression
+## 3. Upstream holding
+
+A single FIFO control queue sits after the first link and before the Market berth. The first bus departs immediately. For a later bus at the front, let $t$ be its decision time and $R$ be the last actual release. The commanded hold is
+
+$$h=\min(h_{\max},\max(0,H-(t-R))).$$
+
+The control point must be clear before the next bus reaches the front. The delay before it reaches the front is queueing, and $h$ is the deliberate hold. The cap limits the hold. Total control time can be longer than the cap. Released buses enter the stop's separate berth queue immediately.
+
+The reference policy uses an 80-second target and a 20-second cap. Both fixed-input runs use the same 100-second road disruption and follow the same passenger cohort.
+
+## 4. Evidence and experiment progression
 
 | Stage | Evidence |
 |---|---|
@@ -28,5 +38,5 @@ The reference values 5.264 s fixed, 2.136 s per boarding and 1.503 s per alighti
 | Three-stop reference | Hand trace: 74 s and 44 s passenger journeys, 0 s and 2 s platform waits, and a bus queuing at two consecutive stops. |
 | Six-stop corridor | Report total completed trips, passenger platform and journey time, and bus berth waiting. Compare nominal service with a 100 s road delay to Bus 4 on the first link. Use the same input cohort and dispatches. |
 | Random arrivals and running times | Draw exponential inter-arrivals via inverse transform and positive lognormal running times. Check the M/M/1 and fixed-headway passenger benchmarks under their own assumptions. |
-| Departure policy | Add a control point after the initial approach. Compare immediate release with $h=\min(h_{\max},\max(0,H-g))$, where $g$ is time since the previous actual release. Include waiting behind a held bus and delay experienced by its riders. |
+| Departure policy | Four-bus hand trace checks first release, short and long headways, maximum hold and queueing. A zero cap must reproduce both original runs. |
 | Policy comparison | Use common inputs within policy pairs and separate seeds across pairs. Evaluate paired differences in journey time and platform wait with 95% intervals across demand and travel-time variability. |

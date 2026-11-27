@@ -4,4 +4,8 @@ Upload [the notebook](notebook/bus-corridor-simulator.ipynb) to Colab and select
 
 In the two-panel time–distance diagram, scan horizontally along a stop line. The gaps between buses show spacing, and flat segments show queueing plus dwell. Bus 4 and the bus following it are highlighted in both panels. Read the results printed above the diagram to compare mean passenger platform wait, end-to-end journey time and berth wait.
 
-The [browser entry point](docs/index.html) summarises the corridor. Interactive playback and policy controls are planned for the next stage.
+The second pair of plots uses the same road disturbance in both policies. Compare passenger platform wait and journey time separately. The queue columns show per-bus delay at the Market berth and at the upstream point. Bus 5's marked hold is part of its flat segment along the Market line.
+
+Change `HOLD_CAP` in the notebook to try a different cap. The chart and results use the selected value.
+
+The [browser entry point](docs/index.html) summarises the corridor. Interactive playback and policy controls are planned.
