@@ -1,25 +1,29 @@
 # User guide
 
-Open [the live demo](https://amri0faz31.github.io/bus-corridor-simulator/) or open `docs/index.html` locally. **Start**, **Pause** and **Reset** control the charts on a shared clock. Choose **1× · real time** for one simulated second per real second. Drag **Jump to time** to inspect a later event or the completed run.
+Open [the live demo](https://amri0faz31.github.io/bus-corridor-simulator/) or open `docs/index.html` locally. **Start**, **Pause** and **Reset** run both panels on one clock. **Jump to time** lets you inspect a particular event. The clock uses hours, minutes and seconds. Choose **1× · real time** to advance one simulated second per real second.
 
-## Three-policy replay
+## Compare no holding and capped holding
 
-The default opens **Published-parameter replay**. The panels use the same passengers and road draws. Baseline runs normally, capped holding spaces releases before Market and faster boarding reduces seconds per boarding passenger by 20% at all stops. The vertical axis shows stops in route order. Blue marks waiting for a berth. Orange marks a hold. The chart shows buses 3–5 by default, and every completed trip contributes to the passenger averages.
+The default preview uses the published link means, sampled traffic variability and a **1 min 40 s** initial dispatch gap. The longer gap separates early bus departures visually. Both panels share it, and the holding rule still targets a **1 min 20 s** release gap before Market. The notebook experiment and both reference replays retain **1 min 20 s** dispatches.
 
-![Three matched policy panels in the published-parameter replay](figures/demo-published.png)
+Choose **Inspect stop** and **Inspect bus**. Each panel shows platform passengers waiting, the berth queue, and the number onboard the selected bus. At Market it also shows buses queued at the control point. The latest departure gap measures the time between the last two departures at the selected stop. The chart shows buses 3–5 initially. If bus markers cluster, leader lines connect offset labels to their actual positions.
 
-At the end of this fixed replay, all three panels complete 288 trips. Mean journey time is **348.20 s** for baseline, **345.37 s** for holding and **330.53 s** for faster boarding. The browser checks completed trips, mean platform wait, mean journey time and Bus 5's Market berth wait against Python using a tolerance of 0.0000001 seconds for timings.
+Platform wait is the mean wait of passengers who have boarded by the current time. Journey time uses completed passengers. Both averages include every bus. Counts change at event times, and boarding and alighting happen at the start of service in the model.
 
-Change demand, travel-time variability or the hold cap under **Scenario options** to run one browser-seeded preview with the published link means. The full notebook experiment uses 30 matched replications per scenario and fixes the cap at 20 s.
+![Baseline and capped holding with live passenger counts in the wider-gap preview](figures/demo-holding-preview.png)
 
-## Original road disruption
+## Reference replays
 
-In **Scenario options**, select **Original road disruption** for the two-policy illustration with the original synthetic distances. Jump to about **7:10** to see Bus 5 held upstream with holding or waiting for a berth in the baseline. Both panels complete 296 trips. Mean journey time in this case is **382.18 s** without holding and **382.63 s** with holding.
+- **Published-parameter replay** uses the notebook's short reference case. All 288 passengers complete. Mean journey time is **5 min 48.20 s** without holding and **5 min 45.37 s** with holding.
+- **Original road disruption** shows the original deterministic two-policy example. At **0:07:10**, Bus 5 waits for the berth without holding and is held before Market under capped holding. Both panels complete 296 trips.
+- **Include faster boarding comparison** adds the supplementary third panel in the published scenario. It assumes 20% less time per boarding passenger at all stops.
 
-![Original road disruption replay at 7:10](figures/demo-market.png)
+The browser checks the two references against Python for completed trips, mean platform wait, mean journey time and Bus 5's Market berth wait. The timing tolerance is 0.0000001 seconds. The live preview is one matched sample. The notebook runs 30 matched replications per scenario.
 
-## Reproduce and verify
+![Live Market queues and Bus 5 counts in the original disruption replay](figures/demo-market.png)
 
-- Run the [notebook](notebook/bus-corridor-simulator.ipynb) to recreate the CSVs, reference values and plots.
-- Run `node tests/check-demo.cjs` to check both notebook references, zero boarding improvement and the preview controls.
-- Run `python tests/check-results.py` to execute the whole notebook in a temporary directory and compare the numeric exports.
+## Reproduce the results
+
+- Run the [notebook](notebook/bus-corridor-simulator.ipynb) to regenerate the CSVs, reference values and figures.
+- Run `node tests/check-demo.cjs` to verify the notebook replays, passenger and queue counts, and both dispatch-gap settings.
+- Run `python tests/check-results.py` to execute the full notebook in a temporary directory and compare its numeric exports.

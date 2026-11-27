@@ -4,6 +4,7 @@ The main scenario uses five mean link times in seconds (104, 98, 85, 71, 69) fro
 
 - `paired-replications.csv` has 540 rows, one per scenario, seed pair and policy. It records generated, completed and measured passenger counts and the measured means.
 - `policy-effects.csv` records each contrast by scenario, metric, comparison policy and reference policy. `difference` is comparison minus reference. `ci_low` and `ci_high` are the paired 95% confidence limits.
+- `monte-carlo-scaling.csv` records the RMSE for each replication count in the 40 s fixed-headway benchmark. Each row uses 64 batches.
 - `browser-reference.json` records Python reference values for the original two-policy road disruption, plus the inputs and reference values for a short three-policy published-parameter replay. The browser copy in `docs/reference.js` is checked for parity.
 
-Platform, journey and passenger-weighted component means are in seconds per passenger. Market berth and control means are in seconds per bus. Queue share is a fraction. Departure-headway standard deviations are in seconds. The notebook regenerates the three exports.
+Platform, journey and passenger-weighted component means are in seconds per passenger. Market berth and control means are in seconds per bus. Queue share is a fraction. Each boarding-stop and upstream queue-length metric is the average number of waiting buses over the observation window. Departure-headway standard deviations are in seconds. The notebook regenerates all four exports.

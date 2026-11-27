@@ -18,7 +18,14 @@ The M/M/1 observations are bus queue waits. Each of eight replications discards 
 | Original stochastic inputs | One pair per scenario reproduces its historical mean journey time, platform wait and Market headway standard deviation. |
 | Zero boarding improvement | Every bus record, passenger record and event matches the baseline in a published-parameter regression run. |
 | Passenger completion | Each fixed policy run completed the identical 296-passenger cohort. A deliberately short dispatch schedule raised an error reporting the unserved rider. |
+| Time-weighted queue length | The hand check gives 12 bus-seconds over a 10-second window, including overlapping waits and waits that cross the observation bounds. |
 | Delay accounting | Every fixed-run bus visit and passenger journey reconciled with its component times. |
+
+## Monte Carlo error scaling
+
+The fixed-headway benchmark has an analytical mean wait of 40 s. Across 64 independent batches, the root mean squared error fell from **1.08 s** at one replication to **0.23 s** at 32 replications. The fitted log–log slope was **−0.454**, compared with the theoretical reference of **−0.500**. Within each batch, points at larger replication counts reuse the earlier replications. Each replication contains 40 complete headway intervals.
+
+![Measured Monte Carlo error and the theoretical inverse-square-root rate](figures/monte-carlo-error-scaling.png)
 
 ## Passenger journey components for the deterministic disruption
 

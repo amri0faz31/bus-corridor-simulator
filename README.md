@@ -1,16 +1,16 @@
 # Bus Corridor Simulator
 
-Compare faster boarding and capped upstream holding on a six-stop bus corridor.
+See when capped upstream holding reduces passenger delay on a six-stop bus corridor.
 
 [Open the live demo](https://amri0faz31.github.io/bus-corridor-simulator/)
 
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/amri0faz31/bus-corridor-simulator/blob/main/notebook/bus-corridor-simulator.ipynb)
 
-![Three time–distance panels for baseline, capped holding and faster boarding](figures/demo-published.png)
+![Two-policy preview with live passenger and bus queue counts](figures/demo-holding-preview.png)
 
 ## The question
 
-When buses arrive close together, they can queue for the same boarding space. Buses that arrive after a long gap can also take longer to board waiting passengers, which lets the next bus catch up. Under different passenger demand and travel-time variability, does faster boarding reduce mean passenger journey time more than capped holding before Market?
+When buses arrive close together, they can queue for the same boarding space. Buses that arrive after a long gap can also take longer to board waiting passengers, which lets the next bus catch up. Under different passenger demand and travel-time variability, when does capped holding before Market reduce mean passenger journey time?
 
 ## Quick start
 
@@ -20,7 +20,7 @@ When buses arrive close together, they can queue for the same boarding space. Bu
 
 ## User guide
 
-Use **Start**, **Pause** and **Reset** on the shared clock. Change demand, travel-time variability or the cap to compare three configurations. Choose **Original road disruption** under **Scenario options** and jump to **7:10** to see Bus 5’s wait move upstream with holding. [Full user guide](USER_GUIDE.md)
+Use **Start**, **Pause** and **Reset** on the shared clock. Change demand, travel-time variability or the cap, and inspect a bus or stop to see its live passenger counts. The default preview runs buses every 1 min 40 s. The reference replays and notebook use 1 min 20 s. Choose **Original road disruption** under **Scenario options** and jump to **0:07:10** to see Bus 5’s wait move upstream with holding. [Full user guide](USER_GUIDE.md)
 
 ## Model and mathematics
 
@@ -32,7 +32,7 @@ If $g$ is the time since the preceding control release, the deliberate hold is $
 
 ![Simulation errors lie within the stated tolerances for the M/M/1 berth queue and fixed-headway passenger-wait benchmarks](figures/analytical-verification.png)
 
-The simulated mean berth wait was **60.22 s** against the M/M/1 benchmark of **60.00 s**. Mean passenger wait at a fixed 80-second headway was **39.97 s** against the expected **40.00 s**. Hand-traced fixtures check FIFO ordering, passenger completion, and equivalence at zero hold. The original stochastic metrics, zero boarding improvement and both browser replays also pass their regression checks. [Verification details](VERIFICATION.md)
+The simulated mean berth wait was **60.22 s** against the M/M/1 benchmark of **60.00 s**. Mean passenger wait at a fixed 80-second headway was **39.97 s** against the expected **40.00 s**. Hand-traced fixtures check FIFO ordering, passenger completion, and equivalence at zero hold. The original stochastic metrics and both browser replays pass their regression checks. A separate fixed-headway experiment measures how Monte Carlo error changes with the number of replications. [Verification details](VERIFICATION.md)
 
 ## Concepts applied
 
@@ -43,11 +43,11 @@ The simulated mean berth wait was **60.22 s** against the M/M/1 benchmark of **6
 
 ## Results, limitations and future work
 
-The study completed 540 runs, using 30 matched replications of all three policies per scenario. Faster boarding shortened mean journeys by **3.50–93.70 s per passenger compared with capped holding**, with paired intervals favouring faster boarding in all six scenarios. Holding reduced mean journey time compared with baseline at low and medium demand. Its journey-time effects at high demand were uncertain, though it reduced platform waiting and improved departure spacing at Market.
+Capped holding reduced mean journey time by **2.83–9.04 s per passenger** at low and medium demand. Its effect on journey time was uncertain at high demand. Platform waiting fell in all six settings, and fewer buses waited for the Market berth. The supplementary faster-boarding results quantify sensitivity to dwell time. [Results and confidence intervals](RESULTS.md)
 
-![Paired differences and 95% confidence intervals in passenger time](figures/paired-policy-effects.png)
+![Paired effects of holding on journey time and platform waiting](figures/paired-policy-effects.png)
 
-The published-parameter scenario uses measured link means and dwell coefficients alongside assumed dispatches, demand, destinations, variability and stop layout. Faster boarding assumes a service improvement across the route. The fixed 100-second road disruption remains a separate illustration. [Results and exports](RESULTS.md) · [Experiment design](EXPERIMENT_PLAN.md)
+The scenario combines published Sri Lankan link times and dwell coefficients with assumed dispatches, demand, destinations, variability and stop layout. The fixed 100-second road disruption remains a separate illustration. [Experiment design](EXPERIMENT_PLAN.md)
 
 ## Key references
 

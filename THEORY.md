@@ -32,7 +32,11 @@ The holding policy uses an 80-second target and a 20-second cap. Short release g
 
 Both original fixed-input policy runs use the same 100-second road disruption and follow the same passenger cohort. The matched published-parameter experiment uses seeded running times without an injected shock.
 
-## 4. Evidence and experiment progression
+## 4. Measuring queue length
+
+A berth-queuing interval starts when a bus reaches the stop and ends when service starts. For an observation window $[a,b)$, the mean queue length equals the sum of each bus's waiting seconds inside the window divided by $b-a$. This is the area under the queue-length curve divided by the window duration. Upstream queueing is measured separately from the bus's arrival at control until the start of its deliberate holding decision.
+
+## 5. Evidence and experiment progression
 
 | Stage | Evidence |
 |---|---|
