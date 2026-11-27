@@ -2,6 +2,8 @@
 
 Trace how delays spread between buses on a straight urban road, and measure what passengers experience.
 
+[Open the live demo](https://amri0faz31.github.io/bus-corridor-simulator/)
+
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/amri0faz31/bus-corridor-simulator/blob/main/notebook/bus-corridor-simulator.ipynb)
 
 ## Corridor and reference run
