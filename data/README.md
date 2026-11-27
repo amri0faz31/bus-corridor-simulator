@@ -1,10 +1,10 @@
-# Input sources and generated outputs
+# Data sources and outputs
 
-The main scenario uses five mean link times in seconds (104, 98, 85, 71, 69) from Road 1, Table 4 of Herath et al. (2024), printed p. 2117. Fixed dwell overhead is 5.264 s, boarding takes 2.136 s per passenger and alighting takes 1.503 s per passenger in the baseline. Those coefficients come from Table 3 and Eq. (9). The 1.7088 s boarding coefficient is hypothetical. Passenger arrivals, destinations, dispatches, variability and stop layout are scenario assumptions. The repository distributes generated data alongside the [project licence](../LICENSE). [Parameter source](https://www.jstage.jst.go.jp/article/easts/15/0/15_2109/_pdf/-char/en)
+Herath et al. (2024), Table 4, supplies the first three Road 1 mean link times: **104, 98 and 85 s**. Table 3 and equation 9 supply the dwell coefficients. Passenger demand, destinations, the delay to Bus 1, the dispatch schedule and road-time variability are scenario assumptions. [Parameter source](https://doi.org/10.11175/easts.15.2109)
 
-- `paired-replications.csv` has 540 rows, one per scenario, seed pair and policy. It records generated, completed and measured passenger counts and the measured means.
-- `policy-effects.csv` records each contrast by scenario, metric, comparison policy and reference policy. `difference` is comparison minus reference. `ci_low` and `ci_high` are the paired 95% confidence limits.
-- `monte-carlo-scaling.csv` records the RMSE for each replication count in the 40 s fixed-headway benchmark. Each row uses 64 batches.
-- `browser-reference.json` records Python reference values for the original two-policy road disruption, plus the inputs and reference values for a short three-policy published-parameter replay and the default three-bus replay. The browser copy in `docs/reference.js` is checked for parity.
+- `browser-reference.json` stores the shared seeded cohorts and road draws used by the browser, the default settings, and the Python reference metrics.
+- `paired-replications.csv` records 360 three-bus runs, one per policy and replication.
+- `policy-effects.csv` records holding-minus-baseline means and paired 95% confidence intervals.
+- `monte-carlo-scaling.csv` records RMSE against the analytical fixed-headway mean.
 
-Platform, journey and passenger-weighted component means are in seconds per passenger. Market berth and control means are in seconds per bus. Queue share is a fraction. Each boarding-stop and upstream queue-length metric is the average number of waiting buses over the observation window. Departure-headway standard deviations are in seconds. The notebook regenerates all four exports.
+All outputs regenerate from the notebook. Timing columns are in seconds. Generated data accompany the repository's [MIT licence](../LICENSE).

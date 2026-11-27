@@ -1,28 +1,7 @@
 # Experiment design
 
-Under different passenger demand and travel-time variability, when does capped holding before Market reduce mean passenger journey time?
+Run exactly three buses on Origin → Market → School → Terminal. The scheduled starts are 1, 7 and 13 minutes. Delay Bus 1 by 240 seconds on the first link. Compare zero holding with a 20-second cap for Bus 2 at the upstream Market control point using a six-minute target release gap. Buses 1 and 3 have zero deliberate holding.
 
-## Inputs and policies
+Cross demand multipliers 0.60, 1.00 and 1.75 with road-time CVs 0.15 and 0.45. Run 30 independent matched pairs per scenario. Each pair shares a seeded passenger manifest and matrix of seeded road times. Passengers enter until the third dispatch at 780 seconds. Verify that each admitted passenger finishes under both policies.
 
-The main scenario uses 104, 98, 85, 71 and 69 s, the first five Road 1 link means from Herath et al. (2024), Table 4, printed p. 2117. The dwell equation uses 5.264 s fixed, 2.136 s per boarding passenger and 1.503 s per alighting passenger from Table 3 and Eq. (9). The stop labels and layout, 80 s dispatch interval, demand and destination rules, and lognormal variability are modelling assumptions. Plots use stop order in the published-parameter scenario. [Parameter source](https://www.jstage.jst.go.jp/article/easts/15/0/15_2109/_pdf/-char/en)
-
-| Configuration | Holding before Market | Boarding seconds per passenger |
-|---|---|---:|
-| Baseline | Off | 2.136 |
-| Capped holding | 80 s target and 20 s cap | 2.136 |
-| Faster boarding | Off | 1.7088 at all boarding stops |
-
-Baseline and capped holding define the main comparison. The faster-boarding policy is supplementary. All policies use one berth per stop. Fixed dwell overhead and the alighting coefficient are shared. Faster boarding is a hypothetical service improvement. Holding targets a short release gap before Market to limit downstream bunching. Its cost is additional time aboard held buses, so the primary measure includes that time.
-
-## Matched comparisons
-
-- Use passenger demand of 0.60×, 1.00× and 1.75× the reference stop arrival rates (4.62, 7.50, 6.00, 5.45 and 5.00 passengers/minute). Cross these with lognormal travel-time CVs 0.15 and 0.45.
-- Generate passenger arrivals from time 0 to 4,800 s. Measure passengers arriving from 900 s up to 4,500 s. The first 900 s form the buildup, and service continues until the cohort completes. The last scheduled dispatch is at 4,800 s.
-- Generate one passenger manifest and one road draw matrix per replication. All three policies receive those same inputs, including passenger destinations and the dispatch schedule. Use separate passenger and travel seeds and 30 independent replications in each scenario.
-- Enforce identical input cohorts and complete journeys. The fixed 100-second disruption is a separate illustration on the original synthetic links.
-- Compute mean journey time as the primary outcome. Track platform wait, passenger-weighted berth queueing, dwell, upstream queueing and deliberate holding. Measure time-weighted bus queues at every boarding stop and separately at the upstream control point. At Market, report bus queue statistics and departure-headway standard deviation. Also measure departure-headway standard deviation at Health Centre, the last boarding stop.
-- Use holding minus baseline as the primary comparison. Compute matched replication-level differences for holding minus baseline, faster boarding minus baseline, and faster boarding minus holding. Report separate two-sided 95% Student t intervals for the mean differences.
-
-The four-run baseline pilot checks Market's approximate berth workload and the frequency and duration of queues. The notebook also compares six original synthetic-link replication pairs against their historical results and checks that a zero boarding improvement reproduces the complete baseline records and event trace. The illustrative main trajectories use medium demand, CV 0.45, replication 1 and buses 13–18, selected by their dispatches just after the measurement window opens.
-
-[Executed results](RESULTS.md) · [Verification](VERIFICATION.md)
+Use mean passenger journey time as the principal result, with platform waiting, both School boarding gaps and mean Market berth waiting alongside it. For each measure compute the mean of the 30 paired holding-minus-baseline differences and its two-sided 95% Student t interval. The browser replays one reference from these modelling assumptions with its own fixed input seeds.
