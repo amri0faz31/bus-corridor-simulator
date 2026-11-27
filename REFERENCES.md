@@ -1,0 +1,9 @@
+# References
+
+1. C. F. Daganzo, “A headway-based approach to eliminate bus bunching: Systematic analysis and comparisons,” *Transportation Research Part B: Methodological*, vol. 43, no. 10, pp. 913–921, 2009. [DOI](https://doi.org/10.1016/j.trb.2009.04.002)
+2. M. Shen, W. Gu, M. J. Cassidy, Y. Lin, and W. Ni, “Breaking a harmful feedback loop: Mitigating bus queuing and headway irregularity on busy corridors,” *Transportation Research Part A: Policy and Practice*, vol. 204, Art. no. 104752, 2026. [DOI](https://doi.org/10.1016/j.tra.2025.104752) · [Author preprint](https://arxiv.org/abs/2403.08230)
+3. T. Jayasinghe, A. Munasinghe, and T. Sivakumar, “A microscopic traffic simulation framework to evaluate the performance of bus priority lanes,” *Journal of South Asian Logistics and Transport*, vol. 3, no. 1, pp. 1–19, 2023. [DOI](https://doi.org/10.4038/jsalt.v3i1.57)
+4. P. M. G. D. M. Herath, V. Wickramasinghe, W. R. S. S. Dharmarathna, and A. G. H. J. Edirisinghe, “Estimating the passenger waiting time for public buses in rural roads: A case study in Kandy district, Sri Lanka,” *Journal of the Eastern Asia Society for Transportation Studies*, vol. 15, pp. 2109–2123, 2024. [DOI](https://doi.org/10.11175/easts.15.2109)
+5. W. Wu, R. Liu, and W. Jin, “Modelling bus bunching and holding control with vehicle overtaking and distributed passenger boarding behaviour,” *Transportation Research Part B: Methodological*, vol. 104, pp. 175–197, 2017. [DOI](https://doi.org/10.1016/j.trb.2017.06.019)
+6. A. M. Law, *Simulation Modeling and Analysis*, 5th ed. McGraw-Hill, 2015. [Publisher](https://www.mheducation.com/highered/product/simulation-modeling-and-analysis-law.html)
+7. MIT OpenCourseWare, “M/M/1 queue,” *Introduction to Manufacturing Systems*. [Analytical queueing notes](https://live.ocw.mit.edu/courses/2-854-introduction-to-manufacturing-systems-fall-2016/927056a1af54772a587fd84ad4951e71_MIT2_854F16_Mm1Queue.pdf)
