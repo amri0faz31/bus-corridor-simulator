@@ -20,7 +20,7 @@ When buses arrive close together, they can queue for the same boarding space. Bu
 
 ## User guide
 
-Use **Start**, **Pause** and **Reset** on the shared clock. Change demand, travel-time variability or the cap, and inspect a bus or stop to see its live passenger counts. The default preview runs buses every 1 min 40 s. The reference replays and notebook use 1 min 20 s. Choose **Original road disruption** under **Scenario options** and jump to **0:07:10** to see Bus 5’s wait move upstream with holding. [Full user guide](USER_GUIDE.md)
+Use **Start**, **Pause** and **Reset** on the shared clock. Change demand, travel-time variability or the cap, and inspect a bus or stop to see its live passenger counts. The default preview runs buses every 2 min. The reference replays and notebook use 1 min 20 s. Choose **Original road disruption** under **Scenario options** and jump to **0:07:10** to see Bus 5’s wait move upstream with holding. [Full user guide](USER_GUIDE.md)
 
 ## Model and mathematics
 
