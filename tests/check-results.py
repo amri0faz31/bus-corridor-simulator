@@ -37,13 +37,14 @@ with tempfile.TemporaryDirectory() as directory:
         if cell["cell_type"] == "code":
             assert not cell.get("outputs"), "Keep generated outputs outside the tracked notebook."
             exec(compile("".join(cell["source"]), f"<notebook cell {index}>", "exec"), scope)
-    for name in ("paired-replications.csv", "policy-effects.csv"):
+    for name in ("paired-replications.csv", "policy-effects.csv", "monte-carlo-scaling.csv"):
         relative = Path("data") / name
         with (root / relative).open(newline="") as expected, relative.open(newline="") as observed:
             compare(list(csv.DictReader(expected)), list(csv.DictReader(observed)))
     relative = Path("data/browser-reference.json")
     compare(json.loads((root / relative).read_text()), json.loads(relative.read_text()))
     for name in ("corridor-time-distance", "holding-comparison", "paired-policy-effects",
-                 "journey-time-components", "published-time-distance", "holding-queue-length"):
+                 "journey-time-components", "published-time-distance", "holding-queue-length",
+                 "monte-carlo-error-scaling"):
         assert (Path("figures") / (name + ".png")).read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
-print("PASS: fresh notebook execution regenerated the checked-in numeric exports and all six figures.")
+print("PASS: fresh notebook execution regenerated the checked-in numeric exports and all seven figures.")
