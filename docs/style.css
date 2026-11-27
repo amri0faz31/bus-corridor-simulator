@@ -52,3 +52,5 @@ summary { color: var(--ink); font-weight: 650; cursor: pointer; }
   .stop:nth-of-type(even)::after { content: ""; position: absolute; top: 12px; left: 50%; height: 20px; border-left: 1px solid var(--line); }
   .stats dt { font-size: .76rem; }
 }
+
+.focus-detail { border-top: 1px solid var(--line); padding-top: 8px; margin: 10px 0 0; color: var(--slate); font-size: .9rem; }

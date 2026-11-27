@@ -14,7 +14,7 @@
     <header>
       <p class="eyebrow">URBAN TRANSIT SIMULATION</p>
       <h1>Bus Corridor Simulator</h1>
-      <p>Follow ten buses along the same six stops. Compare immediate departures with capped holding before Market.</p>
+      <p>Follow three focal buses through a ten-bus corridor. Compare immediate departures with capped holding before Market.</p>
     </header>
 
     <section class="controls" aria-label="Experiment controls">
@@ -28,6 +28,9 @@
         <label for="cap">Maximum hold
           <select id="cap"><option value="0">0 seconds</option><option value="10">10 seconds</option><option value="20" selected>20 seconds</option><option value="40">40 seconds</option></select>
         </label>
+        <label for="vehicle-view">Buses shown
+          <select id="vehicle-view"><option value="focus" selected>Focus · buses 3–5</option><option value="all">All ten buses</option></select>
+        </label>
       </div>
       <div class="actions">
         <button id="start" class="primary" type="button">Start</button>
@@ -40,7 +43,7 @@
     <section aria-label="Live simulations">
       <div class="clock"><span id="status" role="status">Ready</span><span id="clock">0:00</span></div>
       <div id="lanes"></div>
-      <p class="caption">Live averages include completed trips so far. Both panels start from the same passenger and travel-time inputs.</p>
+      <p class="caption">The focus view hides seven markers. The model and live averages still include all buses and all completed trips. Both panels start from the same passenger and travel-time inputs.</p>
     </section>
 
     <details open>

@@ -3,6 +3,7 @@
 const model = BusCorridor;
 const $ = id => document.getElementById(id);
 const controls = ["demand", "variability", "cap"];
+const focalBuses = new Set([2, 3, 4]); // Zero-based indices for buses 3–5.
 const laneNames = ["No holding", "Capped holding"];
 let lanes = [];
 let elapsed = 0;
@@ -18,7 +19,8 @@ function makeLane(label, run) {
   section.innerHTML = '<h2></h2><div class="road" aria-hidden="true"><div class="track"></div></div>'
     + '<dl class="stats"><div><dt>Mean platform wait</dt><dd data-metric="platform_wait">—</dd></div>'
     + '<div><dt>Mean journey time</dt><dd data-metric="journey_time">—</dd></div>'
-    + '<div><dt>Completed trips</dt><dd data-metric="completed">0</dd></div></dl>';
+    + '<div><dt>Completed trips</dt><dd data-metric="completed">0</dd></div></dl>'
+    + '<p class="focus-detail"></p>';
   section.querySelector("h2").textContent = label;
   const road = section.querySelector(".road");
   model.stops.forEach((name, i) => {
@@ -37,6 +39,11 @@ function makeLane(label, run) {
     road.append(marker);
     return marker;
   });
+  const market = run.visits[4][1];
+  const upstream = market.arrival - market.approach;
+  const berthWait = market.serviceStart - market.arrival;
+  section.querySelector(".focus-detail").textContent =
+    "Bus 5 at Market · " + upstream.toFixed(1) + " s at control · " + berthWait.toFixed(1) + " s waiting for berth";
   $("lanes").append(section);
   return { run, section, markers };
 }
@@ -57,7 +64,7 @@ function position(bus, time) {
     }
     if (time <= visit.departure) {
       const state = time < visit.arrival ? "holding" : time < visit.serviceStart ? "waiting" : "boarding";
-      return { km: model.distance[i], state };
+      return { km: model.distance[i] - (state === "holding" ? 0.11 : 0), state };
     }
   }
   return null;
@@ -68,7 +75,8 @@ function draw() {
   $("clock").textContent = Math.floor(seconds / 60) + ":" + String(seconds % 60).padStart(2, "0");
   for (const { run, section, markers } of lanes) {
     run.visits.forEach((bus, i) => {
-      const location = position(bus, elapsed);
+      const focusOnly = $("vehicle-view").value === "focus";
+      const location = !focusOnly || focalBuses.has(i) ? position(bus, elapsed) : null;
       const marker = markers[i];
       marker.hidden = !location;
       marker.style.display = location ? "" : "none";
@@ -170,4 +178,5 @@ $("pause").addEventListener("click", () => {
 $("reset").addEventListener("click", () => prepare(referenceMode));
 $("reference").addEventListener("click", () => prepare(true));
 for (const id of controls) $(id).addEventListener("change", () => prepare(false));
-prepare(false);
+prepare(true);
+$("vehicle-view").addEventListener("change", draw);
