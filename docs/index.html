@@ -14,7 +14,7 @@
   <main>
     <header>
       <h1>Bus Corridor Simulator</h1>
-      <p>Watch how holding before Market changes bus queues and passenger travel times.</p>
+      <p>Compare faster boarding and capped holding using the same passengers and road travel times.</p>
     </header>
 
     <section class="controls" aria-label="Playback and scenario controls">
@@ -42,7 +42,8 @@
             <select id="vehicle-view"><option value="focus" selected>Buses 3–5</option><option value="all">All ten buses</option></select>
           </label>
         </div>
-        <button id="reference" type="button">Load notebook reference</button>
+        <button id="reference" type="button">Published-parameter replay</button>
+        <button id="disruption" type="button">Original road disruption</button>
       </details>
     </section>
 
@@ -60,8 +61,9 @@
 
     <details>
       <summary>About these runs</summary>
-      <p>Both policies use the same bus schedule, passengers and road travel times. At 1×, one real second advances the clock by one simulated second. In the notebook example, Bus 3 starts at 2:40.</p>
-      <p>Holding aims for an 80-second release gap before Market. Both kinds of wait appear at Market’s distance because the model treats the approach and berth as one location on the route.</p>
+      <p>All panels share the same bus schedule, passengers and road travel times. At 1×, one real second advances the clock by one simulated second.</p>
+      <p>The published-parameter scenario uses five link means from Herath et al. The plot shows stop order. Faster boarding assumes 20% less time per boarding passenger at every stop. Holding aims for an 80-second release gap before Market.</p>
+      <p>The original road disruption is a separate two-policy replay. Changing the demand, variability or hold cap opens a single published-parameter preview. The notebook runs the repeated experiment.</p>
     </details>
   </main>
 </body>

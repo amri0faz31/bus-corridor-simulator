@@ -3,6 +3,7 @@
   const stops = ["Origin", "Market", "School", "Junction", "Health Centre", "Terminal"];
   const distance = [0, 0.5, 1.1, 1.7, 2.3, 2.9];
   const meanTimes = [60, 70, 75, 70, 80];
+  const publishedMeanTimes = [104, 98, 85, 71, 69]; // Seconds, Herath et al., Table 4, Road 1.
   const intervals = [13, 8, 10, 11, 12];
   const dispatches = Array.from({ length: 10 }, (_, bus) => bus * 80);
   const [fixedDwell, boardingSeconds, alightingSeconds] = [5.264, 2.136, 1.503];
@@ -50,7 +51,7 @@
     });
     trips.sort((a, b) => a[0] - b[0]);
     const logVariance = Math.log1p(cv * cv);
-    const runningTimes = dispatches.map(() => meanTimes.map(mean => {
+    const runningTimes = dispatches.map(() => publishedMeanTimes.map(mean => {
       if (cv === 0) return mean;
       const normal = Math.sqrt(-2 * Math.log(travel())) * Math.cos(2 * Math.PI * travel());
       return Math.exp(Math.log(mean) - logVariance / 2 + Math.sqrt(logVariance) * normal);
@@ -58,7 +59,11 @@
     return { dispatches, trips, runningTimes, disruption: null };
   }
 
-  function simulate(input, holdCap = 0) {
+  function simulate(input, holdCap = 0, boardingImprovement = 0) {
+    if (!(Number.isFinite(boardingImprovement) && boardingImprovement >= 0 && boardingImprovement <= 1)) {
+      throw new Error("Boarding improvement must be between zero and one.");
+    }
+    const boardingCoefficient = Number((boardingSeconds * (1 - boardingImprovement)).toFixed(4));
     const calendar = [];
     const busQueues = stops.map(() => []);
     const passengerQueues = stops.map(() => []);
@@ -143,7 +148,7 @@
         }
         onboard[id] = remaining;
         visits[id][stop].serviceStart = time;
-        const dwell = fixedDwell + boardingSeconds * boarding.length + alightingSeconds * alighted;
+        const dwell = fixedDwell + boardingCoefficient * boarding.length + alightingSeconds * alighted;
         schedule(time + dwell, "release", id, stop);
       } else if (type === "release") {
         berth[stop] = null;

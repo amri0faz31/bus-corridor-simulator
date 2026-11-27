@@ -32,7 +32,8 @@ button:disabled { opacity: .46; cursor: default; }
 .legend span::before { content: ""; display: inline-block; width: .68em; height: .68em; border-radius: 50%; background: var(--key); margin-right: .4em; }
 .legend-holding { --key: var(--copper); }
 .legend-waiting { --key: var(--berth); }
-#lanes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+#lanes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+#lanes.original { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .lane { min-width: 0; padding: 14px; background: white; border: 1px solid var(--line); border-radius: 12px; }
 .lane h2 { font-size: 1.14rem; margin: 0 0 4px; }
 .finish { margin: 0; font-size: .9rem; color: var(--slate); }
@@ -45,7 +46,7 @@ button:disabled { opacity: .46; cursor: default; }
 details { border-top: 1px solid var(--line); padding-top: 14px; }
 summary { color: var(--ink); font-weight: 650; cursor: pointer; }
 @media (max-width: 760px) {
-  #lanes { grid-template-columns: minmax(0, 1fr); }
+  #lanes, #lanes.original { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 550px) {
   main { padding-top: 14px; }
