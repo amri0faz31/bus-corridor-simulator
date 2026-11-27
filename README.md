@@ -1,51 +1,60 @@
 # Bus Corridor Simulator
 
-Trace how delays spread between buses on a straight urban road, and measure what passengers experience.
+Explore when holding buses before a busy stop can reduce passenger journey time on a six-stop corridor.
 
 [Open the live demo](https://amri0faz31.github.io/bus-corridor-simulator/)
 
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/amri0faz31/bus-corridor-simulator/blob/main/notebook/bus-corridor-simulator.ipynb)
 
-## Corridor and reference run
+![Time–distance charts showing Bus 5 waiting for a berth without holding and being held upstream with a 20-second cap](figures/demo-market.png)
 
-Origin → Market → School → Junction → Health Centre → Terminal. The example dispatches ten buses along five links. Passengers board at five stops, travel to assigned downstream destinations, and add to dwell as they board or alight. Stop names, distances, demand and running times specify a synthetic scenario.
+## The question
 
-The notebook compares normal operation with a temporary delay to Bus 4. The same passenger trips and bus schedule feed both runs.
-
-![Time–distance diagrams for normal and disrupted service](figures/corridor-time-distance.png)
+When buses arrive close together, they can queue for the same boarding space. Buses that arrive after a long gap can also take longer to board waiting passengers, which lets the next bus catch up. Can holding a bus briefly before Market reduce mean passenger journey time, including time spent waiting on board?
 
 ## Quick start
 
-Open [the notebook](notebook/bus-corridor-simulator.ipynb) in Google Colab via **File → Upload notebook**, then select **Runtime → Run all**. In local Jupyter, install the dependencies in `requirements.txt` first. Running the figure cell writes the plot to `figures/` under the current working directory.
+- **Colab.** Open the notebook using the badge above and select **Runtime → Run all**.
+- **Local Python.** From the repository root, install dependencies with `python -m pip install -r requirements.txt`. Open [the notebook](notebook/bus-corridor-simulator.ipynb) in Jupyter and run all cells.
+- **Browser.** Use the live demo link above or open `docs/index.html` in Chrome, Edge or Firefox.
+
+## User guide
+
+Use **Start**, **Pause** and **Reset** to control both policies on a shared clock. At **1×**, one real second advances the simulation by one second. In the notebook example, jump to **7:10** to see Bus 5 held upstream in one panel and waiting for a berth in the other. Change demand, travel-time variability and the maximum hold under **Scenario options**. [Full user guide](USER_GUIDE.md)
+
+## Model and mathematics
+
+The corridor has five road links and one bus berth at each stop. A priority queue advances the clock to the next event. Passenger arrivals follow Poisson processes and sampled road running times are lognormal. At each stop, dwell is a fixed time plus a boarding term and an alighting term.
+
+If $g$ is the time since the preceding control release, the deliberate hold is $h=\min(h_{\max},\max(0,H-g))$. The main comparison uses an 80-second target $H$ and a 20-second cap $h_{\max}$. Passenger journey time runs from platform arrival to the start of alighting at the destination. It includes platform waiting, movement, queues, applicable dwell and holding. [Equations and assumptions](THEORY.md)
 
 ## Verification
 
-The one-berth fixture checks a 20-second bus wait and FIFO ordering when a berth releases at the same time a bus arrives. A second hand calculation verifies two complete passenger journeys and two consecutive berth queues. The same engine runs both checks and the six-stop example. A separate test checks the cap and FIFO holding queue. A zero cap reproduces both original runs exactly. The common engine also passes analytical M/M/1 and fixed-headway waiting checks. See the [verification table and delay accounting](VERIFICATION.md).
+![Simulation errors lie within the stated tolerances for the M/M/1 berth queue and fixed-headway passenger-wait benchmarks](figures/analytical-verification.png)
 
-## Model and concepts applied
+The simulated mean berth wait was **60.22 s** against the M/M/1 benchmark of **60.00 s**. Mean passenger wait at a fixed 80-second headway was **39.97 s** against the expected **40.00 s**. Hand-traced fixtures check FIFO ordering, passenger completion, and equivalence at zero hold. The browser reproduces the notebook reference within the stated tolerance. [Verification details](VERIFICATION.md)
 
-A next-event clock handles movements, berth ownership and passenger queues. Stops use a linear boarding/alighting dwell model. Service and passenger events provide the time–distance plot and summary measures. See [model equations, assumptions and planned experiments](THEORY.md).
+## Concepts applied
 
-## Results
+- Next-event discrete-event simulation represents bus movement, passenger boarding and berth occupancy.
+- Queueing theory provides independent verification targets for berth and passenger waiting.
+- Inverse-transform sampling generates exponential passenger inter-arrival times.
+- Paired Monte Carlo replications reuse the same passenger trips and road draws within each policy pair. Replication-level differences provide 95% confidence intervals.
 
-In the reference run, the 100-second delay raises mean platform wait from 64.6 to 83.7 seconds across the same 296 passengers. Bus 5 queues for 57.9 seconds at Market. Mean passenger journey time rises from 327.8 to 382.2 seconds. The reference run is deterministic.
+## Results, limitations and future work
 
-With the same road delay, Bus 5 spends 57.9 s waiting for the Market berth with immediate release and 37.9 s with the cap. The controller holds that bus for 20.0 s. Across the same 296 passengers, mean platform wait is 83.74 s without holding and 84.28 s with the cap. Mean journey times are 382.18 s and 382.63 s, respectively. These are results for one fixed scenario.
+The study completed 30 paired replications in each of six scenarios. The paired intervals favoured holding for journey time in five scenarios. The interval for high demand with low travel-time variability crossed zero. Estimated mean platform wait fell by **1.29–2.51 s per passenger** across the six scenarios. In the fixed road-disruption example, holding moved 20 seconds of Bus 5’s berth wait upstream while mean journey time across the cohort rose by 0.45 seconds. [Results, plots and exports](RESULTS.md)
 
-![Capped holding comparison under the same road disruption](figures/holding-comparison.png)
+The model uses a synthetic corridor, one berth per stop, unlimited passenger capacity and dwell coefficients transferred from published observations. The results describe these modelled conditions. Future work could check demand and boarding times against urban route observations and test whether passengers left behind change the policy comparison. [Experiment design](EXPERIMENT_PLAN.md)
 
-With an 80-second target and a 20-second cap, the paired 95% journey-time interval favoured holding in five scenarios. The interval for high demand and CV 0.15 crossed zero. Platform waiting fell in all six comparisons, by 1.29–2.51 seconds per passenger on average. At high demand and CV 0.45, holding added 1.63 seconds of deliberate onboard delay per passenger while reducing mean total journey time by 8.65 seconds. The earlier single road shock still shows a case where the queue shrank while passenger time increased.
+## Key references
 
-![Paired effects and confidence intervals](figures/paired-policy-effects.png)
+Daganzo (2009) studies headway-based control. Shen et al. (2026) examine the feedback between berth queues and irregular headways. Herath et al. (2024) provide a Sri Lankan boarding-and-alighting dwell model. [Full references and DOIs](REFERENCES.md)
 
-[Results and exports](RESULTS.md) · [Experiment design](EXPERIMENT_PLAN.md)
+## AI assistance
 
-## Browser
+AI assisted with planning, code, debugging, figures and documentation. The notebook and test scripts contain the reproducible checks used to evaluate the implementation.
 
-Open [docs/index.html](docs/index.html) locally in Chrome, Edge, or Firefox. The page runs client-side and includes a fixed case checked against the notebook. See the [user guide](USER_GUIDE.md) for controls and verification commands.
+## Licence and data credits
 
-## References, AI assistance and licence
-
-[References](REFERENCES.md) · [Data sources](data/README.md) · [MIT licence](LICENSE)
-
-AI assisted with planning, starter code and documentation. The notebook contains reproducible calculations and executable checks.
+[MIT licence](LICENSE) · [Data sources, assumptions and licences](data/README.md)

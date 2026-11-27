@@ -8,6 +8,8 @@ Choose **Load notebook reference** to run the same 296 passenger trips, schedule
 
 In that reference case, jump to about **7:10** to see Bus 5 holding in one panel and waiting for the berth in the other. The final bus clears the terminal at **18:30.3** without holding and **18:46.6** with the cap. Each panel reports its own finish time.
 
+![Notebook replay at 7:10, showing Bus 5 waiting for a berth on the left and holding before Market on the right](figures/demo-market.png)
+
 Change demand, travel-time variability or maximum hold under **Scenario options** to preview a matched pair from browser seed 42. The notebook's [results](RESULTS.md) use 30 independent replication pairs per scenario.
 
 ## Reproduce and verify
