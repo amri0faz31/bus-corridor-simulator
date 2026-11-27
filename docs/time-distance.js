@@ -41,7 +41,7 @@ function trackFrame(track, time) {
   return { trail, current: null };
 }
 
-function drawTimeDistance(canvas, buses, time, axisMinutes, distances, counts) {
+function drawTimeDistance(canvas, buses, time, axisMinutes) {
   const { width, height } = canvas.getBoundingClientRect();
   if (!width || !height) return [];
   const scale = window.devicePixelRatio || 1;
@@ -55,8 +55,8 @@ function drawTimeDistance(canvas, buses, time, axisMinutes, distances, counts) {
   ctx.setTransform(pixelWidth / width, 0, 0, pixelHeight / height, 0, 0);
   ctx.clearRect(0, 0, width, height);
 
-  const left = 115, right = width - (distances ? 27 : 18), top = 39, bottom = height - 44;
-  const positions = distances ? BusCorridor.distance : BusCorridor.stops.map((_, i) => i);
+  const left = 76, right = width - 18, top = 39, bottom = height - 44;
+  const positions = BusCorridor.stops.map((_, i) => i);
   const x = seconds => left + (right - left) * seconds / (60 * axisMinutes);
   const y = position => bottom - (bottom - top) * position / positions.at(-1);
   function line(x1, y1, x2, y2, color, weight = 1) {
@@ -71,23 +71,16 @@ function drawTimeDistance(canvas, buses, time, axisMinutes, distances, counts) {
   ctx.textBaseline = "middle";
   BusCorridor.stops.forEach((name, index) => {
     const row = y(positions[index]);
-    line(left, row, right, row, "#d6e0e2");
-    ctx.font = "11px system-ui, sans-serif";
-    ctx.fillStyle = "#526671";
-    ctx.textAlign = "right";
-    ctx.fillText(name, left - 33, row);
-    ctx.fillStyle = "#eaf2f4";
-    ctx.fillRect(left - 29, row - 7, 24, 14);
-    ctx.fillStyle = "#152a36";
-    ctx.textAlign = "center";
-    ctx.font = "bold 10px system-ui, sans-serif";
-    ctx.fillText(String(counts.waiting[index]), left - 17, row);
-    if (distances) {
-      ctx.font = "11px system-ui, sans-serif";
-      ctx.textAlign = "left";
-      ctx.fillStyle = "#526671";
-      ctx.fillText(positions[index].toFixed(1), right + 5, row);
+    const highlighted = name === "Market" || name === "School";
+    if (highlighted) {
+      ctx.fillStyle = name === "Market" ? "#edf7dd" : "#e4f1f6";
+      ctx.fillRect(left, row - 8, right - left, 16);
     }
+    line(left, row, right, row, highlighted ? "#9fb5b9" : "#d6e0e2");
+    ctx.font = highlighted ? "bold 11px system-ui, sans-serif" : "11px system-ui, sans-serif";
+    ctx.fillStyle = "#152a36";
+    ctx.textAlign = "right";
+    ctx.fillText(name, left - 7, row);
   });
   ctx.font = "11px system-ui, sans-serif";
   for (let minute = 0; minute <= axisMinutes; minute += axisMinutes / 5) {
@@ -101,7 +94,7 @@ function drawTimeDistance(canvas, buses, time, axisMinutes, distances, counts) {
   line(left, bottom, right, bottom, "#93a8b2");
   ctx.fillStyle = "#152a36";
   ctx.textAlign = "left";
-  ctx.fillText(distances ? "Distance (km)" : "Stops in route order", left, 12);
+  ctx.fillText("Stops in route order", left, 12);
   ctx.textAlign = "center";
   ctx.fillText("Time since first dispatch (h:mm)", (left + right) / 2, height - 9);
   line(x(time), top - 7, x(time), bottom, "#8d9da5");
@@ -127,24 +120,19 @@ function drawTimeDistance(canvas, buses, time, axisMinutes, distances, counts) {
     }
   }
 
-  const dots = frames.filter(frame => frame.current).map(({ bus, current }) => {
-    const style = eventStyles[current.state] || { fill: bus.color, outline: "#fff" };
-    return { x: x(current.to), y: y(current.toPosition), number: bus.number, style,
-      state: current.state, stop: current.stop };
+  const dots = frames.filter(frame => frame.trail.length).map(({ bus, current, trail }) => {
+    const endpoint = current || trail.at(-1);
+    const style = eventStyles[endpoint.state] || { fill: bus.color, outline: "#fff" };
+    return { x: x(endpoint.to), y: y(endpoint.toPosition), number: bus.number, style, active: Boolean(current) };
   });
-  drawBusLabels(ctx, dots, counts.onboard, left, right, line);
-  const actions = {
-    holding: "holding before", upstream: "waiting at control before", waiting: "waiting for a berth at",
-  };
-  return dots.filter(dot => actions[dot.state]).map(dot =>
-    "Bus " + dot.number + " " + actions[dot.state] + " " + BusCorridor.stops[dot.stop]);
+  drawBusLabels(ctx, dots, left, right, line);
 }
 
-function drawBusLabels(ctx, dots, onboard, left, right, line) {
+function drawBusLabels(ctx, dots, left, right, line) {
   const positioned = [];
   ctx.font = "bold 10px system-ui, sans-serif";
   for (const dot of dots) {
-    const label = "B" + dot.number + " · " + onboard[dot.number - 1];
+    const label = "B" + dot.number;
     const half = Math.ceil(ctx.measureText(label).width / 2) + 4;
     let position;
     // The dot stays on the trajectory. Only its text can move to make room.
@@ -169,7 +157,7 @@ function drawBusLabels(ctx, dots, onboard, left, right, line) {
     ctx.textAlign = "center";
     ctx.fillText(label, x, y);
   }
-  for (const dot of dots) {
+  for (const dot of dots.filter(dot => dot.active)) {
     ctx.beginPath();
     ctx.arc(dot.x, dot.y, 4.5, 0, 2 * Math.PI);
     ctx.fillStyle = dot.style.fill;

@@ -4,7 +4,6 @@
   --slate: #526671;
   --line: #cbd7da;
   --teal: #176789;
-  --copper: #a44928;
   --berth: #23519b;
   font-family: Inter, system-ui, sans-serif;
 }
@@ -25,26 +24,11 @@ button:disabled { opacity: .46; cursor: default; }
 .options { margin-top: 12px; padding-top: 10px; }
 .options .fields { margin: 12px 0; }
 .clock { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; color: var(--slate); padding: 6px 0; }
-.dispatches { margin: 0 0 3px; font-size: .91rem; font-weight: 650; }
-.arrivals { margin: 0 0 10px; color: var(--slate); font-size: .88rem; }
-.timeline { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 0 0 12px; }
-#seek { flex: 1; min-width: 80px; accent-color: var(--teal); }
 #clock { min-width: 8ch; text-align: right; font-variant-numeric: tabular-nums; font-weight: 650; color: var(--ink); }
-.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0 0 10px; color: var(--slate); font-size: .86rem; }
-.legend span::before { content: ""; display: inline-block; width: .68em; height: .68em; border-radius: 50%; background: var(--key); margin-right: .4em; }
-.legend-traffic { --key: #facc15; }
-.legend-holding { --key: #a3e635; }
-.legend-traffic::before, .legend-holding::before { box-shadow: 0 0 0 1px #526671; }
-.legend-waiting { --key: var(--berth); }
 #lanes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .lane { min-width: 0; padding: 14px; background: white; border: 1px solid var(--line); border-radius: 12px; }
 .lane h2 { font-size: 1.14rem; margin: 0 0 4px; }
-.finish { min-height: 1.45em; margin: 0; font-size: .9rem; color: var(--slate); }
 .time-distance { display: block; width: 100%; height: 280px; margin-top: 10px; }
-.wait-status { min-height: 1.5em; margin: 6px 0 10px; color: var(--slate); font-size: .86rem; }
-.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0; }
-.stats dt { color: var(--slate); font-size: .86rem; }
-.stats dd { margin: 0; font-size: 1.1rem; font-weight: 650; font-variant-numeric: tabular-nums; }
 .caption, details { color: var(--slate); }
 details { border-top: 1px solid var(--line); padding-top: 14px; }
 summary { color: var(--ink); font-weight: 650; cursor: pointer; }
@@ -54,7 +38,24 @@ summary { color: var(--ink); font-weight: 650; cursor: pointer; }
 @media (max-width: 550px) {
   main { padding-top: 14px; }
   .actions label { margin-left: 0; }
-  .stats dt { font-size: .76rem; }
 }
 
-.snapshot { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 10px; color: var(--slate); font-size: .88rem; font-variant-numeric: tabular-nums; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 4px 0 10px; color: var(--slate); font-size: .86rem; }
+.legend span::before { content: ""; display: inline-block; width: .68em; height: .68em; border-radius: 50%; background: var(--key); margin-right: .4em; box-shadow: 0 0 0 1px #526671; }
+.legend-traffic { --key: #facc15; }
+.legend-holding { --key: #a3e635; }
+.legend-waiting { --key: var(--berth); }
+.school-gaps { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 8px 0 0; }
+.school-gaps dt { color: var(--slate); font-size: .85rem; }
+.school-gaps dd { margin: 0; font-weight: 650; font-variant-numeric: tabular-nums; }
+#event { min-height: 1.45em; color: var(--ink); }
+#results { margin-bottom: 18px; }
+#results h2 { margin: 0 0 8px; font-size: 1.2rem; }
+table { width: 100%; border-collapse: collapse; background: white; font-variant-numeric: tabular-nums; }
+th, td { padding: 8px; border-bottom: 1px solid var(--line); text-align: left; }
+th { font-weight: 650; }
+#cohort { color: var(--slate); font-size: .86rem; }
+@media (max-width: 550px) {
+  th, td { padding: 6px; font-size: .78rem; overflow-wrap: anywhere; }
+}

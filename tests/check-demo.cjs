@@ -6,121 +6,48 @@ const reference = require("../data/browser-reference.json");
 require("../docs/reference.js");
 assert.deepEqual(globalThis.CORRIDOR_REFERENCE, reference);
 
-const policyOptions = { baseline: [0, 0], holding: [20, 0], faster_boarding: [0, 0.20] };
-for (const fixture of [
-  { inputs: model.referenceInputs(), policies: reference.policies },
-  reference.published,
-]) {
-  for (const [policy, expected] of Object.entries(fixture.policies)) {
-    const actual = model.metrics(model.simulate(fixture.inputs, ...policyOptions[policy]));
-    assert.equal(actual.completed, expected.completed);
-    for (const key of ["platform_wait", "journey_time", "bus5_market_berth_wait"]) {
-      assert.ok(Math.abs(actual[key] - expected[key]) <= reference.tolerance_seconds,
-        policy + " " + key + ": " + actual[key] + " vs " + expected[key]);
-    }
-  }
-}
-assert.equal(reference.published.inputs.disruption, null);
-const fixture = reference.published.inputs;
-assert.deepEqual(model.simulate(fixture, 0, 0), model.simulate(fixture));
-
-const three = reference.three_bus;
-assert.deepEqual(three.inputs.dispatches, [60, 420, 780]);
-assert(three.inputs.trips.some(([time]) => time > 720));
-for (const [policy, cap] of [["baseline", 0], ["holding", 20]]) {
-  const run = model.simulate(three.inputs, cap);
-  const expected = three.policies[policy];
-  const actual = model.metrics(run);
-  assert.equal(actual.completed, three.inputs.trips.length);
+const input = {
+  dispatches: reference.dispatches, runningTimes: reference.runningTimes,
+  targetGap: reference.targetGap, trips: reference.trips[reference.defaults.demand],
+  disruption: { bus: 0, link: 0, seconds: reference.defaults.delay },
+};
+assert.deepEqual(model.stops, ["Origin", "Market", "School", "Terminal"]);
+assert.deepEqual(input.dispatches, [60, 420, 780]);
+const close = (actual, expected) => assert(Math.abs(actual - expected) <= reference.tolerance_seconds,
+  actual + " differs from " + expected);
+for (const [policy, cap] of [["baseline", 0], ["holding", reference.defaults.cap]]) {
+  const run = model.simulate(input, cap);
+  const actual = model.metrics(run), expected = reference.policies[policy];
   assert.equal(actual.completed, expected.completed);
-  assert.equal(run.riders.filter(rider => rider.bus === 2).length, expected.bus3_boardings);
-  assert(expected.bus3_boardings > 0);
-  assert(Math.abs(run.visits[2][1].departure - run.visits[1][1].departure - expected.market_departure_gap)
-    <= reference.tolerance_seconds);
-  for (const key of ["platform_wait", "journey_time"]) {
-    assert(Math.abs(actual[key] - expected[key]) <= reference.tolerance_seconds);
-  }
-}
-for (const demand of [0.6, 1, 1.75]) {
-  for (const gap of [360, 480, 600]) {
-    for (const delay of [0, 120, 240]) {
-      const inputs = model.threeBusInputs(demand, 0.15, 42, gap, delay);
-      assert.deepEqual(inputs.dispatches, [60, 60 + gap, 60 + 2 * gap]);
-      assert(inputs.trips.at(-1)[0] > inputs.dispatches[1]);
-      for (const cap of [0, 20, 60]) {
-        const run = model.simulate(inputs, cap);
-        assert.equal(model.metrics(run).completed, inputs.trips.length);
-        assert(run.riders.some(rider => rider.bus === 2));
-      }
+  assert.equal(actual.school_boarding.length, 3);
+  actual.school_boarding.forEach((time, i) => close(time, expected.school_boarding[i]));
+  for (const key of ["platform_wait", "journey_time", "bus2_hold"]) close(actual[key], expected[key]);
+  for (const bus of [0, 2]) close(run.visits[bus][1].arrival, run.visits[bus][1].ready);
+  for (const [index, route] of run.visits.entries()) {
+    const track = busTrack(route, index, [0, 1, 2, 3]);
+    assert.deepEqual(trackFrame(track, 0), { trail: [], current: null });
+    assert.equal(trackFrame(track, Infinity).current, null);
+    assert.equal(track.segments.filter(s => s.state === "holding").length, index === 1 && cap ? 1 : 0);
+    for (let segment = 1; segment < track.segments.length; segment++) {
+      const before = track.segments[segment - 1], after = track.segments[segment];
+      close(before.to, after.from);
+      close(before.toPosition, after.fromPosition);
     }
   }
 }
-
-const disrupted = model.simulate(model.referenceInputs());
-const beforeMarketService = model.snapshot(disrupted, 420, 4, 1);
-assert.equal(beforeMarketService.waiting, 23);
-const duringMarketService = model.snapshot(disrupted, 430, 4, 1);
-assert.equal(duringMarketService.waiting, 1);
-assert.equal(duringMarketService.lastBoarded, 23);
-assert.equal(duringMarketService.onboard, 6);
-assert.equal(duringMarketService.berthQueue, 1);
-assert.equal(model.snapshot(disrupted, Infinity, 4, 1).onboard, 0);
-const counts = model.passengerCounts(disrupted, 430);
-assert.equal(counts.waiting[1], 1);
-assert.equal(counts.onboard[4], 6);
-assert.equal(counts.waiting.reduce((a, b) => a + b) + counts.onboard.reduce((a, b) => a + b)
-  + model.metrics(disrupted, 430).completed, disrupted.riders.filter(p => p.arrival <= 430).length);
-
-const delayedTrack = busTrack(disrupted.visits[3], 3, model.distance);
-assert.equal(disrupted.visits[3][1].roadDelay, 100);
-const road = delayedTrack.segments.find(segment => segment.state === "traffic");
-const midpoint = (road.from + road.to) / 2;
-const movingFrame = trackFrame(delayedTrack, midpoint);
-assert.equal(movingFrame.current.to, midpoint);
-assert.equal(movingFrame.current.toPosition, 0.25);
-assert.equal(movingFrame.trail.at(-1), movingFrame.current);
-for (let index = 1; index < delayedTrack.segments.length; index++) {
-  const previous = delayedTrack.segments[index - 1];
-  const next = delayedTrack.segments[index];
-  assert.equal(previous.to, next.from);
-  assert.equal(previous.toPosition, next.fromPosition);
-}
-assert.deepEqual(trackFrame(delayedTrack, 0), { trail: [], current: null });
-assert.equal(trackFrame(delayedTrack, Infinity).current, null);
-const held = model.simulate(model.referenceInputs(), 20);
-const heldTrack = busTrack(held.visits[4], 4, model.distance);
-assert.equal(trackFrame(heldTrack, 430).current.state, "holding");
-
-const shortDispatches = [0, 10, 11, 100];
-const shortRun = model.simulate({
-  dispatches: shortDispatches, trips: [], runningTimes: shortDispatches.map(() => [1, 10, 10, 10, 10]),
-}, 20);
-assert.equal(model.snapshot(shortRun, 25, 2, 1).upstreamQueue, 1);
-assert.equal(model.snapshot(shortRun, 25, 2, 1).berthQueue, 0);
-
-for (const demand of [0.6, 1, 1.75]) {
-  for (const cv of [0.15, 0.45]) {
-    const input = model.sampledInputs(demand, cv, 42);
-    assert.deepEqual(input, model.sampledInputs(demand, cv, 42));
-    const wider = model.sampledInputs(demand, cv, 42, 100);
-    assert.equal(wider.dispatches[1] - wider.dispatches[0], 100);
-    assert.deepEqual(wider.trips, input.trips);
-    assert.deepEqual(wider.runningTimes, input.runningTimes);
-    const widest = model.sampledInputs(demand, cv, 42, 120);
-    assert.equal(widest.dispatches[1] - widest.dispatches[0], 120);
-    assert.deepEqual(widest.trips, input.trips);
-    assert.deepEqual(widest.runningTimes, input.runningTimes);
-    for (const preview of [input, wider, widest]) {
-      const baseline = model.simulate(preview);
-      const faster = model.simulate(preview, 0, 0.20);
-      assert.equal(model.metrics(faster).completed, preview.trips.length);
-      for (const cap of [0, 10, 20, 40]) {
-        const held = model.simulate(preview, cap);
-        assert.equal(model.metrics(held).completed, model.metrics(baseline).completed);
-        assert.equal(model.metrics(held).completed, preview.trips.length);
-        if (cap === 0) assert.deepEqual(held, baseline);
-      }
+for (const trips of Object.values(reference.trips)) {
+  for (const delay of [0, 120, 240, 360]) {
+    const selected = { ...input, trips, disruption: { ...input.disruption, seconds: delay } };
+    const baseline = model.simulate(selected);
+    assert.deepEqual(model.simulate(selected, 0), baseline);
+    for (const cap of [20, 40, 60]) {
+      const held = model.simulate(selected, cap);
+      assert.deepEqual(held.riders.map(p => [p.arrival, p.origin, p.destination]),
+        baseline.riders.map(p => [p.arrival, p.origin, p.destination]));
+      assert(held.riders.every(p => p.alight !== null));
+      const hold = model.metrics(held).bus2_hold;
+      assert(hold >= 0 && hold <= cap + reference.tolerance_seconds);
     }
   }
 }
-console.log("PASS: seven notebook reference runs, continuous trails, and all 81 three-bus preview settings.");
+console.log("PASS: School boarding times, passenger parity, zero cap, and 48 control combinations.");

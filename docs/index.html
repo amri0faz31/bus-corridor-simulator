@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Bus Corridor Simulator</title>
+  <title>Does holding the middle bus help passengers?</title>
   <link rel="stylesheet" href="style.css">
   <script defer src="simulation.js"></script>
   <script defer src="reference.js"></script>
@@ -13,59 +13,48 @@
 <body>
   <main>
     <header>
-      <h1>Bus Corridor Simulator</h1>
-      <p>Follow three buses and compare what happens when Bus 2 is delayed.</p>
+      <h1>Does holding the middle bus help passengers?</h1>
+      <p>Bus 1 is delayed. Compare the same three buses and passengers with and without a hold before Market.</p>
     </header>
-
     <section class="controls" aria-label="Playback and scenario controls">
       <div class="actions">
         <button id="start" class="primary" type="button">Start</button>
         <button id="pause" type="button">Pause</button>
         <button id="reset" type="button">Reset</button>
-        <label for="speed">Speed
-          <select id="speed"><option value="1">1× · real time</option><option value="5" selected>5×</option><option value="20">20×</option></select>
+        <label for="cap">Maximum hold
+          <select id="cap"><option value="0">0 s</option><option value="20" selected>20 s</option><option value="40">40 s</option><option value="60">60 s</option></select>
         </label>
       </div>
       <details class="options">
-        <summary>Change the experiment</summary>
+        <summary>Scenario settings</summary>
         <div class="fields">
+          <label for="traffic-delay">Bus 1 road delay
+            <select id="traffic-delay"><option value="0">None</option><option value="120">2 min</option><option value="240" selected>4 min</option><option value="360">6 min</option></select>
+          </label>
           <label for="demand">Passenger demand
-            <select id="demand"><option value="0.60">Low</option><option value="1" selected>Medium</option><option value="1.75">High</option></select>
-          </label>
-          <label for="traffic-delay">Traffic delay for Bus 2
-            <select id="traffic-delay"><option value="0">None</option><option value="120">2 min</option><option value="240" selected>4 min</option></select>
-          </label>
-          <label for="cap">Maximum hold
-            <select id="cap"><option value="0">0 s</option><option value="20" selected>20 s</option><option value="60">1 min</option></select>
-          </label>
-          <label for="dispatch-gap">Scheduled departure gap
-            <select id="dispatch-gap"><option value="360" selected>6 min</option><option value="480">8 min</option><option value="600">10 min</option></select>
+            <select id="demand"><option>Low</option><option selected>Medium</option><option>High</option></select>
           </label>
         </div>
-        <button id="reference" type="button">Restore notebook example</button>
       </details>
     </section>
-
-    <section aria-label="Live simulations">
-      <div class="clock"><span id="scenario"></span><span id="status" role="status">Ready</span></div>
-      <p id="dispatches" class="dispatches"></p>
-      <p id="arrivals" class="arrivals"></p>
-      <div class="timeline">
-        <label for="seek">Jump to time</label>
-        <input type="range" id="seek" min="0" max="0" step="any" value="0">
-        <output id="clock" for="seek" aria-live="off">0:00:00</output>
-      </div>
-      <p class="legend"><span class="legend-traffic">Road delay</span><span class="legend-holding">Holding before Market</span><span class="legend-waiting">Bus queueing</span></p>
-      <div id="lanes"></div>
-      <p class="caption">Numbers by stops count people waiting. Labels above bus dots show the bus number and the number onboard.</p>
+    <div class="clock"><span id="dispatches"></span><output id="clock" aria-live="off">0:00:00</output></div>
+    <p class="legend"><span class="legend-traffic">Road delay</span><span class="legend-holding">Holding</span><span class="legend-waiting">Queueing</span></p>
+    <div id="lanes"></div>
+    <p id="event" role="status"></p>
+    <section id="results" hidden>
+      <h2>This run</h2>
+      <table>
+        <thead><tr><th scope="col">Passenger measure</th><th scope="col">No holding</th><th scope="col">Hold Bus 2</th><th scope="col">Difference (s/passenger)</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p id="cohort"></p>
     </section>
-
     <details>
-      <summary>About these runs</summary>
-      <p>All panels share the same bus schedule, passengers and road travel times. At 1×, one real second advances the clock by one simulated second.</p>
-      <p>Rising lines show buses travelling. Flat lines show time at a stop or its approach. Yellow marks road delay, light green marks deliberate holding and blue marks queueing.</p>
-      <p>Holding aims to keep release gaps before Market close to the scheduled departure gap. Random passengers arrive until Bus 3 dispatches. The buses then finish serving those passengers.</p>
-      <p>Counts update at passenger arrivals and at the start of boarding or alighting. Platform waits average boarded passengers, and journey times average completed trips.</p>
+      <summary>About / How to use</summary>
+      <p>Choose a hold cap and press Start. The charts share a clock. Sloped lines show travelling and flat lines show waiting or serving passengers. The two School gaps are measured when buses start boarding.</p>
+      <p>Each stop serves one bus at a time. Passengers who are waiting can board at the start of service. New passengers arrive until Bus 3 dispatches at 13 minutes. All admitted passengers finish their journeys.</p>
+      <p>Only Bus 2 can be deliberately held. Riders already aboard spend that time waiting. The table reports Hold Bus 2 minus No holding for the same riders. The notebook estimates the average effects across repeated matched runs.</p>
+      <p id="reference-status"></p>
     </details>
   </main>
 </body>

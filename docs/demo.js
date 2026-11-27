@@ -1,50 +1,43 @@
 "use strict";
 
 const model = BusCorridor;
+const reference = CORRIDOR_REFERENCE;
 const $ = id => document.getElementById(id);
-const controls = ["demand", "traffic-delay", "cap", "dispatch-gap"];
+const controls = ["cap", "traffic-delay", "demand"];
+const playbackRate = 32;
 let lanes = [];
 let elapsed = 0;
 let duration = 0;
 let axisMinutes = 0;
 let frame = 0;
-let playing = false;
 let previousFrame = 0;
-let demandEnd = 0;
+let playing = false;
 
-function makeLane(label, run, positions) {
+function minutesSeconds(seconds) {
+  const tenths = Math.round(seconds * 10);
+  return Math.floor(tenths / 600) + " min " + (tenths % 600 / 10).toFixed(1) + " s";
+}
+
+function clockTime(seconds) {
+  const whole = Math.floor(seconds);
+  return Math.floor(whole / 3600) + ":" + [Math.floor(whole / 60) % 60, whole % 60]
+    .map(value => String(value).padStart(2, "0")).join(":");
+}
+
+function makeLane(label, run) {
   const section = document.createElement("section");
   section.className = "lane";
-  section.innerHTML = '<h2></h2><p class="finish" aria-live="polite"></p><canvas class="time-distance" role="img"></canvas>'
-    + '<p class="wait-status"></p>'
-    + '<dl class="stats"><div><dt>Mean platform wait</dt><dd data-metric="platform_wait">—</dd></div>'
-    + '<div><dt>Mean journey time</dt><dd data-metric="journey_time">—</dd></div>'
-    + '<div><dt>Completed trips</dt><dd data-metric="completed">0</dd></div></dl>'
-    + '<p class="snapshot last-bus"></p>';
+  section.innerHTML = '<h2></h2><canvas class="time-distance" role="img"></canvas>'
+    + '<dl class="school-gaps" aria-label="School boarding gaps">'
+    + '<div><dt>School · B1 to B2</dt><dd>—</dd></div><div><dt>School · B2 to B3</dt><dd>—</dd></div></dl>';
   section.querySelector("h2").textContent = label;
   const chart = section.querySelector("canvas");
-  chart.setAttribute("aria-label", label + ". Bus positions by time and route position, from Origin to Terminal.");
+  chart.setAttribute("aria-label", label + " time–distance diagram for buses 1, 2 and 3");
   $("lanes").append(section);
   return {
-    run, chart, tracks: run.visits.map((visits, index) => busTrack(visits, index, positions)),
-    finish: section.querySelector(".finish"),
-    waitStatus: section.querySelector(".wait-status"), metrics: section.querySelectorAll("[data-metric]"),
-    lastBus: section.querySelector(".last-bus"),
+    chart, tracks: run.visits.map((route, index) => busTrack(route, index, [0, 1, 2, 3])),
+    metrics: model.metrics(run), gaps: section.querySelectorAll("dd"), market: run.visits[1][1],
   };
-}
-
-function formatTime(time, tenths = false) {
-  const seconds = tenths ? Math.round(time * 10) / 10 : Math.floor(time);
-  const remainder = (seconds % 60).toFixed(tenths ? 1 : 0);
-  const minutes = String(Math.floor(seconds / 60) % 60).padStart(2, "0");
-  return Math.floor(seconds / 3600) + ":" + minutes + ":" + remainder.padStart(tenths ? 4 : 2, "0");
-}
-
-function formatDuration(time) {
-  const seconds = Math.round(time * 100) / 100;
-  if (seconds >= 3600) return formatTime(seconds, true);
-  const minutes = Math.floor(seconds / 60);
-  return (minutes ? minutes + " min " : "") + (seconds % 60).toFixed(2) + " s";
 }
 
 function updateText(element, value) {
@@ -52,29 +45,16 @@ function updateText(element, value) {
 }
 
 function draw() {
-  $("clock").textContent = formatTime(elapsed);
-  $("seek").value = elapsed;
-  const phase = elapsed < demandEnd ? "Random arrivals until " + formatTime(demandEnd)
-    : "Arrivals closed at " + formatTime(demandEnd) + " · final passengers finish their trips";
-  updateText($("arrivals"), phase);
-  for (const { run, chart, tracks, finish, waitStatus, metrics, lastBus } of lanes) {
-    const finishText = elapsed >= run.end ? "Last bus finished at " + formatTime(run.end, true) : "";
-    updateText(finish, finishText);
-    const counts = model.passengerCounts(run, elapsed);
-    const waitText = drawTimeDistance(chart, tracks, elapsed, axisMinutes, false, counts).join(" · ");
-    updateText(waitStatus, waitText);
-    const measured = model.metrics(run, elapsed);
-    for (const target of metrics) {
-      const value = measured[target.dataset.metric];
-      const label = target.dataset.metric === "completed" ? String(value)
-        : value === null ? "—" : formatDuration(value);
-      updateText(target, label);
-    }
-    const boardings = run.riders.filter(rider => rider.bus === 2 && rider.board <= elapsed).length;
-    const gap = run.visits[2][1].departure - run.visits[1][1].departure;
-    const gapText = elapsed >= run.visits[2][1].departure ? " · Market gap between Buses 2 and 3: " + formatDuration(gap) : "";
-    updateText(lastBus, "Passengers boarded by Bus 3: " + boardings + gapText);
+  updateText($("clock"), clockTime(elapsed));
+  for (const lane of lanes) {
+    drawTimeDistance(lane.chart, lane.tracks, elapsed, axisMinutes);
+    const board = lane.metrics.school_boarding;
+    lane.gaps.forEach((element, index) => updateText(element, elapsed >= board[index + 1]
+      ? minutesSeconds(board[index + 1] - board[index]) : "—"));
   }
+  const held = lanes[1];
+  updateText($("event"), held && elapsed >= held.market.ready
+    ? "Bus 2 held for " + Number(held.metrics.bus2_hold.toFixed(2)) + " s before Market." : "");
 }
 
 function pause() {
@@ -84,96 +64,95 @@ function pause() {
   $("pause").disabled = true;
 }
 
-function resetTime() {
+function reset() {
   pause();
   elapsed = 0;
+  $("results").hidden = true;
   draw();
-  $("status").textContent = "Ready";
 }
 
-function prepare(replay) {
-  const reference = globalThis.CORRIDOR_REFERENCE;
-  if (replay) {
-    $("demand").value = "1";
-    $("traffic-delay").value = "240";
-    $("cap").value = "20";
-    $("dispatch-gap").value = "360";
+function displayResults() {
+  const [baseline, held] = lanes.map(lane => lane.metrics);
+  const table = $("results").querySelector("tbody");
+  table.replaceChildren();
+  for (const [metric, label] of [["platform_wait", "Mean platform wait"], ["journey_time", "Mean total journey time"]]) {
+    const row = table.insertRow();
+    const heading = document.createElement("th");
+    heading.scope = "row";
+    heading.textContent = label;
+    row.append(heading);
+    const difference = held[metric] - baseline[metric];
+    const rounded = Number(difference.toFixed(2));
+    const signed = (rounded > 0 ? "+" : "") + rounded.toFixed(2);
+    for (const value of [minutesSeconds(baseline[metric]), minutesSeconds(held[metric]), signed]) {
+      row.insertCell().textContent = value;
+    }
   }
-  try {
-    const cap = Number($("cap").value);
-    const inputs = replay ? reference.three_bus.inputs : model.threeBusInputs(
-      Number($("demand").value), 0.15, 42, Number($("dispatch-gap").value), Number($("traffic-delay").value)
-    );
-    demandEnd = inputs.dispatches.at(-1);
-    const baseline = model.simulate(inputs);
-    const held = model.simulate(inputs, cap);
-    const positions = model.stops.map((_, index) => index);
-    $("lanes").replaceChildren();
-    lanes = [makeLane("No holding", baseline, positions), makeLane("Hold up to " + cap + " s", held, positions)];
-    duration = Math.max(baseline.end, held.end);
-    axisMinutes = 5 * Math.ceil(duration / 300);
-    $("seek").max = duration;
-    $("dispatches").textContent = inputs.dispatches.map((time, index) =>
-      "Bus " + (index + 1) + " starts at " + formatTime(time)).join(" · ");
-    resetTime();
-    const passed = replay && referenceMatches(baseline, reference.three_bus.policies.baseline, reference.tolerance_seconds)
-      && referenceMatches(held, reference.three_bus.policies.holding, reference.tolerance_seconds);
-    $("scenario").textContent = replay
-      ? (passed ? "Notebook example matched" : "Notebook example did not match")
-      : "Random sample · seed 42";
-  } catch (error) {
-    pause();
-    $("start").disabled = true;
-    $("status").textContent = error.message;
-  }
+  $("cohort").textContent = baseline.completed + " identical passengers completed each run.";
+  $("results").hidden = false;
 }
 
-function referenceMatches(run, expected, tolerance) {
-  const measured = model.metrics(run);
-  const boardings = run.riders.filter(rider => rider.bus === 2).length;
-  const gap = run.visits[2][1].departure - run.visits[1][1].departure;
-  return measured.completed === expected.completed && boardings === expected.bus3_boardings
-    && Math.abs(gap - expected.market_departure_gap) <= tolerance
-    && ["platform_wait", "journey_time"].every(key => Math.abs(measured[key] - expected[key]) <= tolerance);
+function matchesReference(actual, expected) {
+  const close = (value, target) => Math.abs(value - target) <= reference.tolerance_seconds;
+  return actual.completed === expected.completed
+    && close(actual.platform_wait, expected.platform_wait)
+    && close(actual.journey_time, expected.journey_time)
+    && actual.school_boarding.every((time, index) => close(time, expected.school_boarding[index]));
+}
+
+function prepare() {
+  const delay = Number($("traffic-delay").value);
+  const cap = Number($("cap").value);
+  const demand = $("demand").value;
+  const input = {
+    dispatches: reference.dispatches,
+    trips: reference.trips[demand],
+    runningTimes: reference.runningTimes,
+    targetGap: reference.targetGap,
+    disruption: { bus: 0, link: 0, seconds: delay },
+  };
+  $("dispatches").textContent = input.dispatches.map((time, index) => "B" + (index + 1) + " at "
+    + time / 60 + " min").join(" · ");
+  const baseline = model.simulate(input);
+  const held = model.simulate(input, cap);
+  $("lanes").replaceChildren();
+  lanes = [makeLane("No holding", baseline), makeLane("Hold Bus 2", held)];
+  duration = Math.max(baseline.end, held.end);
+  axisMinutes = 5 * Math.ceil(duration / 300);
+  const defaults = delay === reference.defaults.delay && cap === reference.defaults.cap
+    && demand === reference.defaults.demand;
+  $("reference-status").textContent = defaults
+    ? (matchesReference(lanes[0].metrics, reference.policies.baseline)
+      && matchesReference(lanes[1].metrics, reference.policies.holding)
+      ? "Default School boarding times and passenger averages match the notebook."
+      : "Default run did not match the notebook reference.")
+    : "Restore the default controls to check this replay against the notebook.";
+  reset();
 }
 
 function tick(now) {
   if (!playing) return;
-  const realSeconds = (now - previousFrame) / 1000;
-  elapsed = Math.min(duration, elapsed + realSeconds * Number($("speed").value));
+  elapsed = Math.min(duration, elapsed + (now - previousFrame) * playbackRate / 1000);
   previousFrame = now;
   draw();
   if (elapsed < duration) {
     frame = requestAnimationFrame(tick);
   } else {
     pause();
-    $("status").textContent = "All runs complete";
+    displayResults();
   }
 }
 
 $("start").addEventListener("click", () => {
-  if (elapsed >= duration) resetTime();
+  if (elapsed >= duration) reset();
   playing = true;
   previousFrame = performance.now();
   $("start").disabled = true;
   $("pause").disabled = false;
-  $("status").textContent = "Running";
   frame = requestAnimationFrame(tick);
 });
-$("pause").addEventListener("click", () => {
-  pause();
-  $("status").textContent = "Paused";
-});
-$("reset").addEventListener("click", resetTime);
-$("seek").addEventListener("input", () => {
-  pause();
-  const requested = Number($("seek").value);
-  // Browsers can round a range edge slightly below the exact simulation end.
-  elapsed = requested + 1e-6 >= duration ? duration : requested;
-  draw();
-  $("status").textContent = elapsed >= duration ? "All runs complete" : "Paused";
-});
-$("reference").addEventListener("click", () => prepare(true));
-for (const id of controls) $(id).addEventListener("change", () => prepare(false));
-prepare(true);
+$("pause").addEventListener("click", pause);
+$("reset").addEventListener("click", reset);
+for (const id of controls) $(id).addEventListener("change", prepare);
 window.addEventListener("resize", draw);
+prepare();
