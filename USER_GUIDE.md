@@ -1,21 +1,25 @@
 # User guide
 
-Open [docs/index.html](docs/index.html) directly in Chrome, Edge or Firefox. **Start**, **Pause** and **Reset** control both time–distance charts on a shared clock. The default speed is 5×. Select **1× · real time** for one simulated second per real second, or drag **Jump to time** to inspect a specific event.
+Open [the live demo](https://amri0faz31.github.io/bus-corridor-simulator/) or open `docs/index.html` locally. **Start**, **Pause** and **Reset** control the charts on a shared clock. Choose **1× · real time** for one simulated second per real second. Drag **Jump to time** to inspect a later event or the completed run.
 
-The horizontal axis shows minutes since first dispatch. The vertical axis shows distance in kilometres and labels each stop. Numbered dots show buses 3–5 by default. A flat trace means the bus stayed in one place. Orange marks holding before Market and blue marks a wait for a berth. Select **All ten buses** under **Scenario options** to show every bus. Passenger averages always use completed trips from all ten buses.
+## Three-policy replay
 
-Choose **Load notebook reference** to run the same 296 passenger trips, scheduled buses and road disruption as the notebook's deterministic case. The demo compares both policies against Python for the passenger count, platform and journey means, and Bus 5's Market berth wait. The tolerance is 0.0000001 seconds for timings. On a complete run the means displayed should be 83.74 s platform and 382.18 s journey without holding, and 84.28 s platform and 382.63 s journey with the cap.
+The default opens **Published-parameter replay**. The panels use the same passengers and road draws. Baseline runs normally, capped holding spaces releases before Market and faster boarding reduces seconds per boarding passenger by 20% at all stops. The vertical axis shows stops in route order. Blue marks waiting for a berth. Orange marks a hold. The chart shows buses 3–5 by default, and every completed trip contributes to the passenger averages.
 
-In that reference case, jump to about **7:10** to see Bus 5 holding in one panel and waiting for the berth in the other. The final bus clears the terminal at **18:30.3** without holding and **18:46.6** with the cap. Each panel reports its own finish time.
+![Three matched policy panels in the published-parameter replay](figures/demo-published.png)
 
-![Notebook replay at 7:10, showing Bus 5 waiting for a berth on the left and holding before Market on the right](figures/demo-market.png)
+At the end of this fixed replay, all three panels complete 288 trips. Mean journey time is **348.20 s** for baseline, **345.37 s** for holding and **330.53 s** for faster boarding. The browser checks completed trips, mean platform wait, mean journey time and Bus 5's Market berth wait against Python using a tolerance of 0.0000001 seconds for timings.
 
-Change demand, travel-time variability or maximum hold under **Scenario options** to preview a matched pair from browser seed 42. The notebook's [results](RESULTS.md) use 30 independent replication pairs per scenario.
+Change demand, travel-time variability or the hold cap under **Scenario options** to run one browser-seeded preview with the published link means. The full notebook experiment uses 30 matched replications per scenario and fixes the cap at 20 s.
+
+## Original road disruption
+
+In **Scenario options**, select **Original road disruption** for the two-policy illustration with the original synthetic distances. Jump to about **7:10** to see Bus 5 held upstream with holding or waiting for a berth in the baseline. Both panels complete 296 trips. Mean journey time in this case is **382.18 s** without holding and **382.63 s** with holding.
+
+![Original road disruption replay at 7:10](figures/demo-market.png)
 
 ## Reproduce and verify
 
-- Run the [notebook](notebook/bus-corridor-simulator.ipynb) from a fresh Python or Colab runtime to regenerate the CSVs, reference case and plots.
-- Run `node tests/check-demo.cjs` to check the browser engine against the notebook reference and exercise the 24 combinations of available input controls.
-- Run `python tests/check-results.py` with the project dependencies installed to reproduce the notebook in a temporary directory and compare the checked-in numeric exports.
-
-Offline Chrome testing covered playback and seeking, holding and berth-wait colours, separate finish times, the reference totals and mobile layout.
+- Run the [notebook](notebook/bus-corridor-simulator.ipynb) to recreate the CSVs, reference values and plots.
+- Run `node tests/check-demo.cjs` to check both notebook references, zero boarding improvement and the preview controls.
+- Run `python tests/check-results.py` to execute the whole notebook in a temporary directory and compare the numeric exports.

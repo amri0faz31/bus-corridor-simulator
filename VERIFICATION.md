@@ -15,12 +15,14 @@ The M/M/1 observations are bus queue waits. Each of eight replications discards 
 | Three-stop route | Journey times were 74 s and 44 s. Platform waits were 0 s and 2 s. |
 | Control point | First release, cap, FIFO queue and long-gap release matched the hand trace. |
 | Zero-cap regression | Stop times and passenger records matched between the zero-cap and original configurations in both fixed examples. |
+| Original stochastic inputs | One pair per scenario reproduces its historical mean journey time, platform wait and Market headway standard deviation. |
+| Zero boarding improvement | Every bus record, passenger record and event matches the baseline in a published-parameter regression run. |
 | Passenger completion | Each fixed policy run completed the identical 296-passenger cohort. A deliberately short dispatch schedule raised an error reporting the unserved rider. |
 | Delay accounting | Every fixed-run bus visit and passenger journey reconciled with its component times. |
 
 ## Passenger journey components for the deterministic disruption
 
-These are passenger-weighted means over the same 296 individual trips. Platform wait and the components below it sum to journey time, before rounding. This fixed example illustrates the accounting and is separate from the planned stochastic experiment.
+These are passenger-weighted means over the same 296 individual trips. Platform wait and the components below it sum to journey time, before rounding. This fixed example illustrates the accounting and is separate from the published-parameter experiment.
 
 | Component (s/passenger) | No holding | 20 s cap |
 |---|---:|---:|
