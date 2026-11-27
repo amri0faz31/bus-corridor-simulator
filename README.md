@@ -6,11 +6,11 @@ Follow three buses along a four-stop corridor to see whether briefly holding Bus
 
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/amri0faz31/bus-corridor-simulator/blob/main/notebook/bus-corridor-simulator.ipynb)
 
-![Two policy charts and the passenger comparison for the three-bus replay](figures/demo-middle-bus.png)
+![Live onboard and waiting passenger counts for the two policies](figures/demo-middle-bus.png)
 
 ## The question
 
-When Bus 1 is delayed on its first road link, does briefly holding Bus 2 before Market improve passenger journeys? The two runs share three dispatches, the same passengers and the same road-time draws. School boarding gaps show how spacing changes downstream.
+When Bus 1 runs late, how does passenger boarding change bus spacing, and does briefly holding Bus 2 improve passenger journeys? The two runs share three dispatches, the same passengers and the same road-time draws. School boarding gaps show how spacing changes downstream.
 
 ## Quick start
 
@@ -24,7 +24,7 @@ Press **Start** to run both charts on a shared clock. Change the **Maximum hold*
 
 ## Model and mathematics
 
-Three buses dispatch six minutes apart. A next-event calendar handles bus arrivals and releases, passenger arrivals and boarding starts. Stops have one FIFO boarding berth. Dwell is $5.264+2.136B+1.503A$ seconds for $B$ boardings and $A$ alightings. Only Bus 2 can be deliberately held before Market, for up to the chosen cap. [Theory](THEORY.md)
+Three buses dispatch at 1, 5 and 9 minutes. A two-minute first-link delay to Bus 1 is the default. A next-event calendar handles bus arrivals and releases, passenger arrivals and boarding starts. Stops have one FIFO boarding berth. Dwell is $5.264+2.136B+1.503A$ seconds for $B$ boardings and $A$ alightings. Only Bus 2 can be deliberately held before Market, for up to the chosen cap. [Theory](THEORY.md)
 
 ## Verification
 
@@ -40,7 +40,7 @@ The M/M/1 and fixed-headway benchmarks pass, alongside the hand traces and zero-
 
 ## Results and limitations
 
-The 20-second cap reduced average journey time in four of six demand and road-variability settings, based on paired intervals. The other two intervals crossed zero. The estimates apply to the assumed passenger demand, stop layout, bus schedule and first-link disruption. [Results](RESULTS.md) · [Experiment design](EXPERIMENT_PLAN.md)
+A 30-second shock reduced the Market gap by 30 seconds. Passenger-dependent dwell amplified that reduction to 36.12 seconds at School on average. The default 20-second hold increased journeys by 5.81 seconds per passenger. All six paired journey-time intervals crossed zero. The estimates apply to the assumed passenger demand, stop layout, bus schedule and first-link disruption. [Results](RESULTS.md) · [Experiment design](EXPERIMENT_PLAN.md)
 
 ## References, AI assistance and credits
 

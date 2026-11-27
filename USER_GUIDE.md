@@ -1,11 +1,11 @@
 # User guide
 
-[Open the live demo](https://amri0faz31.github.io/bus-corridor-simulator/) or double-click `docs/index.html`. Buses 1, 2 and 3 dispatch at **1, 7 and 13 minutes**. Both panels use the same three buses, passengers and road travel draws.
+[Open the live demo](https://amri0faz31.github.io/bus-corridor-simulator/) or double-click `docs/index.html`. The two panels share the schedule, passengers, road draws and clock. B1, B2 and B3 start at **1, 5 and 9 minutes**.
 
-1. Keep the default 20-second cap and press **Start**. The complete replay takes about 37 seconds. Use **Pause** to inspect a point or **Reset** to start again.
-2. Watch for the event message when Bus 2 reaches the control point before Market. It reports the actual hold. Check the two School gaps as B2 and B3 start boarding.
-3. At the end, **This run** compares mean platform waiting and total journey time for the same 89 passengers. A negative difference favours holding.
+1. Press **Start**. Use **Pause** during the run or **Reset** to return to the start. The default replay takes about **35 seconds**.
+2. Read the passenger labels during playback. **B2 · 8 aboard** is the current onboard count. **Market · 5 waiting** is the current platform count. Yellow marks Bus 1’s imposed delay. Purple marks additional delay from the no-passing rule. Green marks holding and blue marks queueing.
+3. Compare both School boarding gaps as they appear. After both runs finish, use **This run** to compare passenger time. For the default replay, mean journey time increases by **5.81 s per passenger** with holding.
 
-**Scenario settings** contains Bus 1’s road delay and the passenger-demand level. Changing any model parameter resets both panels. The default settings are **20 s maximum hold**, **4 min road delay**, and **Medium** demand. Restoring all three restores the verified notebook case.
+![Default replay with live onboard and waiting passenger counts](figures/demo-middle-bus.png)
 
-Yellow marks a delay on the road, green marks deliberate holding and blue marks queueing. Market and School are shaded on both charts. Both panels share the elapsed clock. [Research results](RESULTS.md)
+**Scenario settings** controls Bus 1’s road delay and passenger demand. **Maximum hold** controls the cap for Bus 2. Restore **2 min**, **Medium** and **20 s** for the default notebook replay. Changing any setting resets both panels. [Research results](RESULTS.md)
