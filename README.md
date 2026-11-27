@@ -20,7 +20,7 @@ When buses arrive close together, they can queue for the same boarding space. Bu
 
 ## User guide
 
-Use **Start**, **Pause** and **Reset** on the shared clock. Change demand, travel-time variability or the cap, and inspect a bus or stop to see its live passenger counts. The default preview runs buses every 2 min. The reference replays and notebook use 1 min 20 s. Choose **Original road disruption** under **Scenario options** and jump to **0:07:10** to see Bus 5’s wait move upstream with holding. [Full user guide](USER_GUIDE.md)
+The browser opens a three-bus comparison with dispatches at **1, 7 and 13 minutes** and random arrivals until Bus 3 dispatches. Use **Start**, **Pause**, **Reset** and **Jump to time**. Raise or lower the passenger demand, traffic delay, hold cap or dispatch gap under **Change the experiment**. The longer notebook experiment uses matched replications and confidence intervals. [Full user guide](USER_GUIDE.md)
 
 ## Model and mathematics
 
@@ -32,7 +32,7 @@ If $g$ is the time since the preceding control release, the deliberate hold is $
 
 ![Simulation errors lie within the stated tolerances for the M/M/1 berth queue and fixed-headway passenger-wait benchmarks](figures/analytical-verification.png)
 
-The simulated mean berth wait was **60.22 s** against the M/M/1 benchmark of **60.00 s**. Mean passenger wait at a fixed 80-second headway was **39.97 s** against the expected **40.00 s**. Hand-traced fixtures check FIFO ordering, passenger completion, and equivalence at zero hold. The original stochastic metrics and both browser replays pass their regression checks. A separate fixed-headway experiment measures how Monte Carlo error changes with the number of replications. [Verification details](VERIFICATION.md)
+The simulated mean berth wait was **60.22 s** against the M/M/1 benchmark of **60.00 s**. Mean passenger wait at a fixed 80-second headway was **39.97 s** against the expected **40.00 s**. Hand-traced fixtures check FIFO ordering, passenger completion, and equivalence at zero hold. The original stochastic metrics and all three browser-engine reference fixtures pass their regression checks. A separate fixed-headway experiment measures how Monte Carlo error changes with the number of replications. [Verification details](VERIFICATION.md)
 
 ## Concepts applied
 
