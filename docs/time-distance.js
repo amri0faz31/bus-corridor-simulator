@@ -1,7 +1,7 @@
 "use strict";
 
 const busColors = ["#126681", "#76529b", "#3a7760"];
-const waitColors = { holding: "#a44928", waiting: "#23519b" };
+const waitColors = { holding: "#a44928", upstream: "#23519b", waiting: "#23519b" };
 
 function busTrack(visits, index, positions) {
   const segments = [];
@@ -13,7 +13,8 @@ function busTrack(visits, index, positions) {
     if (stop > 0) {
       add(visits[stop - 1].departure, visit.approach, positions[stop - 1], km, stop, "moving");
     }
-    add(visit.approach, visit.arrival, km, km, stop, "holding");
+    add(visit.approach, visit.ready, km, km, stop, "upstream");
+    add(visit.ready, visit.arrival, km, km, stop, "holding");
     add(visit.arrival, visit.serviceStart, km, km, stop, "waiting");
     add(visit.serviceStart, visit.departure, km, km, stop, "at stop");
   });
@@ -34,7 +35,7 @@ function drawTimeDistance(canvas, buses, time, axisMinutes, distances) {
   ctx.setTransform(pixelWidth / width, 0, 0, pixelHeight / height, 0, 0);
   ctx.clearRect(0, 0, width, height);
 
-  const left = 81, right = width - (distances ? 25 : 10), top = 32, bottom = height - 44;
+  const left = 81, right = width - (distances ? 25 : 18), top = 32, bottom = height - 44;
   const maxPosition = distances ? BusCorridor.distance.at(-1) : BusCorridor.stops.length - 1;
   const x = seconds => left + (right - left) * seconds / (60 * axisMinutes);
   const y = km => bottom - (bottom - top) * km / maxPosition;
@@ -65,7 +66,7 @@ function drawTimeDistance(canvas, buses, time, axisMinutes, distances) {
     line(tick, top, tick, bottom, "#e7edef");
     ctx.fillStyle = "#526671";
     ctx.textAlign = "center";
-    ctx.fillText(String(minute), tick, bottom + 13);
+    ctx.fillText(Math.floor(minute / 60) + ":" + String(minute % 60).padStart(2, "0"), tick, bottom + 13);
   }
   line(left, top, left, bottom, "#93a8b2");
   line(left, bottom, right, bottom, "#93a8b2");
@@ -73,7 +74,7 @@ function drawTimeDistance(canvas, buses, time, axisMinutes, distances) {
   ctx.textAlign = "left";
   ctx.fillText(distances ? "Distance along route (km)" : "Stops in route order", left, 12);
   ctx.textAlign = "center";
-  ctx.fillText("Time since first dispatch (min)", (left + right) / 2, height - 9);
+  ctx.fillText("Time since first dispatch (h:mm)", (left + right) / 2, height - 9);
   line(x(time), top - 7, x(time), bottom, "#8d9da5");
 
   const dots = [];
@@ -95,11 +96,17 @@ function drawTimeDistance(canvas, buses, time, axisMinutes, distances) {
     if (dot) dots.push(dot);
   }
 
-  // Keep a waiting bus legible when it shares the same stop and time with another bus.
-  dots.sort((a, b) => Number(Boolean(waitColors[a.state])) - Number(Boolean(waitColors[b.state])));
+  // Move only the numbered markers when labels overlap. Trails retain the event positions.
+  const labels = [];
   for (const dot of dots) {
+    const offsets = [0, -18, 18, -36, 36];
+    const labelY = offsets.map(offset => dot.y + offset)
+      .find(candidate => candidate >= 15 && candidate <= bottom
+        && labels.every(label => Math.hypot(dot.x - label.x, candidate - label.y) >= 17)) ?? dot.y;
+    labels.push({ x: dot.x, y: labelY });
+    if (labelY !== dot.y) line(dot.x, dot.y, dot.x, labelY, dot.color);
     ctx.beginPath();
-    ctx.arc(dot.x, dot.y, 8, 0, 2 * Math.PI);
+    ctx.arc(dot.x, labelY, 8, 0, 2 * Math.PI);
     ctx.fillStyle = dot.color;
     ctx.fill();
     ctx.lineWidth = 1.5;
@@ -107,11 +114,13 @@ function drawTimeDistance(canvas, buses, time, axisMinutes, distances) {
     ctx.stroke();
     ctx.fillStyle = "#fff";
     ctx.font = "bold 10px system-ui, sans-serif";
-    ctx.fillText(String(dot.number), dot.x, dot.y);
+    ctx.fillText(String(dot.number), dot.x, labelY);
   }
 
   return dots.filter(dot => waitColors[dot.state]).map(dot => {
-    const action = dot.state === "holding" ? "holding before" : "waiting for a berth at";
+    const action = {
+      holding: "holding before", upstream: "waiting at control before", waiting: "waiting for a berth at",
+    }[dot.state];
     return "Bus " + dot.number + " " + action + " " + BusCorridor.stops[dot.stop];
   });
 }
