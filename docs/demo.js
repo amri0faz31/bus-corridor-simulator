@@ -4,19 +4,17 @@ const model = BusCorridor;
 const $ = id => document.getElementById(id);
 const controls = ["demand", "variability", "cap"];
 const focalBuses = new Set([2, 3, 4]); // Zero-based indices for buses 3–5.
-const laneNames = ["No holding", "Capped holding"];
 let lanes = [];
 let elapsed = 0;
 let duration = 0;
 let frame = 0;
 let playing = false;
 let previousFrame = 0;
-let referenceMode = false;
 
 function makeLane(label, run) {
   const section = document.createElement("section");
   section.className = "lane";
-  section.innerHTML = '<h2></h2><div class="road" aria-hidden="true"><div class="track"></div></div>'
+  section.innerHTML = '<h2></h2><p class="finish"></p><div class="road" aria-hidden="true"><div class="track"></div></div>'
     + '<dl class="stats"><div><dt>Mean platform wait</dt><dd data-metric="platform_wait">—</dd></div>'
     + '<div><dt>Mean journey time</dt><dd data-metric="journey_time">—</dd></div>'
     + '<div><dt>Completed trips</dt><dd data-metric="completed">0</dd></div></dl>'
@@ -45,7 +43,7 @@ function makeLane(label, run) {
   section.querySelector(".focus-detail").textContent =
     "Bus 5 at Market · " + upstream.toFixed(1) + " s at control · " + berthWait.toFixed(1) + " s waiting for berth";
   $("lanes").append(section);
-  return { run, section, markers };
+  return { run, section, markers, finish: section.querySelector(".finish") };
 }
 
 function percent(km) {
@@ -70,10 +68,18 @@ function position(bus, time) {
   return null;
 }
 
+function formatTime(time, tenths = false) {
+  const seconds = tenths ? Math.round(time * 10) / 10 : Math.floor(time);
+  const remainder = (seconds % 60).toFixed(tenths ? 1 : 0);
+  return Math.floor(seconds / 60) + ":" + remainder.padStart(tenths ? 4 : 2, "0");
+}
+
 function draw() {
-  const seconds = Math.floor(elapsed);
-  $("clock").textContent = Math.floor(seconds / 60) + ":" + String(seconds % 60).padStart(2, "0");
-  for (const { run, section, markers } of lanes) {
+  $("clock").textContent = formatTime(elapsed);
+  $("seek").value = elapsed;
+  for (const { run, section, markers, finish } of lanes) {
+    const finishText = elapsed >= run.end ? "Last bus finished at " + formatTime(run.end, true) : "Last bus finish · —";
+    if (finish.textContent !== finishText) finish.textContent = finishText;
     run.visits.forEach((bus, i) => {
       const focusOnly = $("vehicle-view").value === "focus";
       const location = !focusOnly || focalBuses.has(i) ? position(bus, elapsed) : null;
@@ -106,10 +112,10 @@ function resetTime() {
   pause();
   elapsed = 0;
   draw();
+  $("status").textContent = "Ready";
 }
 
 function prepare(useReference) {
-  referenceMode = useReference;
   if (useReference) {
     $("demand").value = "reference";
     $("variability").value = "reference";
@@ -125,10 +131,12 @@ function prepare(useReference) {
       : model.sampledInputs(Number($("demand").value), Number($("variability").value), 42);
     const runs = [model.simulate(inputs), model.simulate(inputs, cap)];
     $("lanes").replaceChildren();
-    lanes = runs.map((run, i) => makeLane(i === 1 ? laneNames[i] + " · " + cap + " s cap" : laneNames[i], run));
+    const heldLabel = cap === 0 ? "Holding off (0 s cap)" : "Hold up to " + cap + " s";
+    lanes = [makeLane("No holding", runs[0]), makeLane(heldLabel, runs[1])];
     duration = Math.max(...runs.map(run => run.end));
+    $("seek").max = duration;
     resetTime();
-    $("status").textContent = useReference ? referenceStatus(runs) : "Ready · seed 42";
+    $("scenario").textContent = useReference ? referenceStatus(runs) : "Sample run · seed 42";
   } catch (error) {
     pause();
     $("start").disabled = true;
@@ -145,20 +153,20 @@ function referenceStatus(runs) {
       && ["platform_wait", "journey_time", "bus5_market_berth_wait"].every(key =>
         Math.abs(measured[key] - expected[key]) <= reference.tolerance_seconds);
   });
-  return passing ? "Notebook reference matched · 296 trips per policy" : "Notebook reference did not match.";
+  return passing ? "Notebook reference matched" : "Notebook reference did not match.";
 }
 
 function tick(now) {
   if (!playing) return;
-  elapsed = Math.min(duration, elapsed + (now - previousFrame) * 0.08);
+  const realSeconds = (now - previousFrame) / 1000;
+  elapsed = Math.min(duration, elapsed + realSeconds * Number($("speed").value));
   previousFrame = now;
   draw();
   if (elapsed < duration) {
     frame = requestAnimationFrame(tick);
   } else {
     pause();
-    $("status").textContent = referenceMode
-      ? referenceStatus(lanes.map(item => item.run)) : "Finished · both runs complete";
+    $("status").textContent = "Both runs complete";
   }
 }
 
@@ -175,7 +183,13 @@ $("pause").addEventListener("click", () => {
   pause();
   $("status").textContent = "Paused";
 });
-$("reset").addEventListener("click", () => prepare(referenceMode));
+$("reset").addEventListener("click", resetTime);
+$("seek").addEventListener("input", () => {
+  pause();
+  elapsed = Number($("seek").value);
+  draw();
+  $("status").textContent = elapsed >= duration ? "Both runs complete" : "Paused";
+});
 $("reference").addEventListener("click", () => prepare(true));
 for (const id of controls) $(id).addEventListener("change", () => prepare(false));
 prepare(true);

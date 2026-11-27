@@ -24,9 +24,12 @@ button:disabled { opacity: .46; cursor: default; }
 .primary { background: var(--teal); border-color: var(--teal); color: white; }
 .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
 .clock { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; color: var(--slate); padding: 6px 0; }
+.timeline { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 0 0 12px; }
+#seek { flex: 1; min-width: 80px; accent-color: var(--teal); }
 #clock { font-variant-numeric: tabular-nums; font-weight: 650; color: var(--ink); }
 .lane { padding: 14px 16px; background: white; border: 1px solid var(--line); border-radius: 12px; margin-bottom: 10px; }
 .lane h2 { font-size: 1.14rem; margin: 0 0 4px; }
+.finish { margin: 0; font-size: .9rem; color: var(--slate); }
 .road { position: relative; margin: 9px 8px; height: 94px; }
 .track { position: absolute; left: 0; right: 0; top: 52px; height: 2px; background: #93a8b2; }
 .stop { position: absolute; top: 46px; transform: translateX(-50%); text-align: center; font-size: .8rem; }
