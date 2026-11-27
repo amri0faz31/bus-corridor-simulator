@@ -2,22 +2,21 @@
 
 ## Common model and current implementation
 
-| Topic | Implemented in this checkpoint | Remaining for the experiment |
+| Topic | Implemented in this checkpoint | Use in the completed experiment |
 |---|---|---|
-| Discrete-event simulation | A time/priority/insertion-order event heap controls arrivals, control releases, service starts and berth releases. | Add bay-aware admission and release at Market. |
-| Queueing | FIFO bus queues, one berth at each stop, independent passenger queue at each platform, and a FIFO upstream control point. | Test the two-bay stop's allocation and occupancy. |
-| Random variates | Inverse-transform exponential passenger inter-arrivals, seeded lognormal bus/link draws, and exponential service draws in the M/M/1 benchmark. | Pre-generate and reuse a trip manifest and a bus/link draw matrix per comparison pair. |
-| Monte Carlo | Independent replications verify the analytical benchmarks. A small baseline-only pilot checks the proposed range. | Collect paired intervention effects and confidence intervals over 30 independent replications per scenario. |
+| Discrete-event simulation | A time/priority/insertion-order event heap controls arrivals, control releases, service starts and berth releases. | Used as verified. |
+| Queueing | FIFO bus queues, one berth at each stop, independent passenger queue at each platform, and a FIFO upstream control point. | Kept one berth at every stop. |
+| Random variates | Inverse-transform exponential passenger inter-arrivals, seeded lognormal bus/link draws, and exponential service draws in the M/M/1 benchmark. | Uses a shared trip manifest and bus/link draw matrix in each pair. |
+| Monte Carlo | Independent replications verify the analytical benchmarks. A small baseline-only pilot checks the proposed range. | Uses 30 independent pairs per scenario with separate demand and road seeds. |
 
 Platform queues grow between buses and can increase dwell through passenger counts. Berth queues emerge when a bus arrives during service. The no-passing rule imposes one-second minimum link exit separation, which creates recorded following delay when a bus would otherwise arrive earlier. The one-berth layout, unlimited seating, deterministic one-third short-trip destination rule, arrival processes, route geometry and running-time parameters are modelling assumptions. Dwell coefficients are transferred from the rural Kandy study. See [references](REFERENCES.md) and [verification](VERIFICATION.md).
 
-## Three configurations for the next stage
+## Configurations compared
 
 1. **Baseline:** one berth at every stop and no holding.
-2. **Operational:** one berth at every stop and the existing Market control point, 80-second target gap and 20-second hold cap. The queue behind a held bus is accounted for separately.
-3. **Infrastructure:** two independent bays at Market, free entry to either empty bay and free exit from either bay, no holding, and one berth everywhere else. Bay geometry and independent access are assumptions. This is a capacity change with different resource and cost implications from changing a release rule.
+2. **Holding:** the same one-berth corridor with an upstream control point before Market, an 80-second target gap and a 20-second maximum deliberate hold.
 
-The second bay is pending implementation. Buses queue FIFO for the next open bay. If both bays are free they are assigned in FIFO bus order, using a deterministic bay ID. The platform remains one shared FIFO passenger queue. Alighting precedes boarding at each service start. The first service start takes the riders then waiting, and simultaneous starts use admission order to allocate each rider once. A rider arriving during a visit waits for the next service start at either bay. A bus may depart before a bus in the other bay; on the next road link the no-passing rule follows the actual departure order. Verify with three buses, two occupied bays, a waiting bus, simultaneous releases and arrivals, a single boarding of each rider, and a later-admitted bus finishing first.
+The common model is frozen. The infrastructure alternative and finite vehicle capacity are outside this experiment.
 
 ## Numerical settings and baseline-only pilot
 
@@ -39,7 +38,9 @@ Queues are present even with approximate workload below one. The pilot is a diag
 ## Matched study design
 
 - Generate demand over $[0,4800)$ seconds, with the first 900 s as buildup. Measure passengers arriving in $[900,4500)$ seconds. Continue input demand for 300 s after measurement ends and dispatch the final scheduled bus at 4,800 s. Drain the event calendar and require every generated passenger to complete in all configurations. Stop with an explicit error if any trip is unfinished or if the input cohort differs. Compute stop/headway records over the same measurement window under each configuration.
-- Use 30 independent replications per scenario with a seed set distinct from the pilot. Use separate streams for arrivals and running times. In each replication, the dispatch list, passenger IDs and trip manifest, and bus/link free-running time draws are identical in all three configurations. Service and the realised bus trajectories can differ.
+- Use 30 independent replications per scenario with a seed set distinct from the pilot. Use separate streams for arrivals and running times. In each replication, the dispatch list, passenger IDs and trip manifest, and bus/link free-running time draws are identical in both configurations. Service and the realised bus trajectories can differ.
 - Primary outcome: mean journey time in seconds per measured passenger. Secondary outcomes: mean platform wait, berth queueing, sampled road running, extra no-passing time, dwell, upstream queueing and deliberate holding, departure-headway variability at Market and downstream, and generated/measured/completed counts.
-- Compare each intervention against its matched baseline. Compute one difference in the replicate mean per seed and a two-sided paired t interval, $ar d pm t_{0.975,R-1}s_d/sqrt R$. Negative intervention-minus-baseline journey differences favour the intervention. Keep harmful and near-zero estimates, and mark direction uncertain when an interval spans zero.
+- Compare holding against its matched baseline. Compute one difference in the replicate mean per seed and a two-sided paired t interval, $ar d pm t_{0.975,R-1}s_d/sqrt R$. Negative intervention-minus-baseline journey differences favour the intervention. Keep harmful and near-zero estimates, and mark direction uncertain when an interval spans zero.
 - Produce a paired-effect plot with confidence intervals, passenger-weighted delay component changes, queue/headway summaries and time–distance diagrams for a reference seed selected before inspecting policy effects. Report comparisons as conditional on route, demand and infrastructure assumptions.
+
+See [RESULTS.md](RESULTS.md) for the executed study.

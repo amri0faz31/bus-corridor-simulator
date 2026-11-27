@@ -1,11 +1,15 @@
 # User guide
 
-Upload [the notebook](notebook/bus-corridor-simulator.ipynb) to Colab and select **Runtime → Run all**. The verification cells print results for exact hand checks. The reference corridor cells compare normal service with a temporary running-time delay to Bus 4.
+Open [docs/index.html](docs/index.html) directly in Chrome, Edge, or Firefox. Start moves both corridors with a shared clock. Pause stops playback, and Reset restarts the selected input. Change demand, running-time variability, or hold cap to generate a fresh pair from browser seed 42. A ring indicates a bus waiting for a berth. An orange bus is in the control point. Running positions between stops are interpolated from event times.
 
-In the two-panel time–distance diagram, scan horizontally along a stop line. The gaps between buses show spacing, and flat segments show queueing plus dwell. Bus 4 and the bus following it are highlighted in both panels. Read the results printed above the diagram to compare mean passenger platform wait, end-to-end journey time and berth wait.
+Choose **Load notebook reference** to run the same 296 passenger trips, scheduled buses and road disruption as the notebook's deterministic case. The demo compares both policies against Python for the passenger count, platform and journey means, and Bus 5's Market berth wait. The tolerance is 0.0000001 seconds for timings. On a complete run the means displayed should be 83.74 s platform and 382.18 s journey without holding, and 84.28 s platform and 382.63 s journey with the cap.
 
-The second pair of plots uses the same road disturbance in both policies. Compare passenger platform wait and journey time separately. The queue columns show per-bus delay at the Market berth and at the upstream point. Bus 5's marked hold is part of its flat segment along the Market line.
+The sampled preview uses a browser-specific random-number generator. It illustrates one matched pair and does not reproduce the notebook's Monte Carlo sequences. The notebook's [results](RESULTS.md) use 30 independent replication pairs per scenario.
 
-Change `HOLD_CAP` in the notebook to try a different cap. The chart and results use the selected value.
+## Reproduce and verify
 
-The [browser entry point](docs/index.html) summarises the corridor. Interactive playback and policy controls are planned.
+- Run the [notebook](notebook/bus-corridor-simulator.ipynb) from a fresh Python or Colab runtime to regenerate the CSVs, reference case and plots.
+- Run `node tests/check-demo.cjs` to check the browser engine against the notebook reference and exercise the 24 combinations of available input controls.
+- Run `python tests/check-results.py` with the project dependencies installed to reproduce the notebook in a temporary directory and compare the checked-in numeric exports.
+
+Offline Chrome testing covered opening the HTML directly, the three controls, Start/Pause/Reset, the reference totals, mobile layout and console errors.

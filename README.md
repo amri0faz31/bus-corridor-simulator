@@ -24,7 +24,7 @@ The one-berth fixture checks a 20-second bus wait and FIFO ordering when a berth
 
 A next-event clock handles movements, berth ownership and passenger queues. Stops use a linear boarding/alighting dwell model. Service and passenger events provide the time–distance plot and summary measures. See [model equations, assumptions and planned experiments](THEORY.md).
 
-## Results and next stage
+## Results
 
 In the reference run, the 100-second delay raises mean platform wait from 64.6 to 83.7 seconds across the same 296 passengers. Bus 5 queues for 57.9 seconds at Market. Mean passenger journey time rises from 327.8 to 382.2 seconds. The reference run is deterministic.
 
@@ -32,11 +32,15 @@ With the same road delay, Bus 5 spends 57.9 s waiting for the Market berth with 
 
 ![Capped holding comparison under the same road disruption](figures/holding-comparison.png)
 
-The [experiment specification](EXPERIMENT_PLAN.md) defines matched comparisons of no holding, capped holding and a two-bay Market stop. The notebook currently includes the analytical checks and baseline-only input pilots.
+With an 80-second target and a 20-second cap, the paired 95% journey-time interval favoured holding in five scenarios. The interval for high demand and CV 0.15 crossed zero. Platform waiting fell in all six comparisons, by 1.29–2.51 seconds per passenger on average. At high demand and CV 0.45, holding added 1.63 seconds of deliberate onboard delay per passenger while reducing mean total journey time by 8.65 seconds. The earlier single road shock still shows a case where the queue shrank while passenger time increased.
+
+![Paired effects and confidence intervals](figures/paired-policy-effects.png)
+
+[Results and exports](RESULTS.md) · [Experiment design](EXPERIMENT_PLAN.md)
 
 ## Browser
 
-The [browser entry point](docs/index.html) summarises the reference corridor. See [the guide](USER_GUIDE.md) to reproduce the runs and interpret the plot.
+Open [docs/index.html](docs/index.html) locally in Chrome, Edge, or Firefox. The page runs client-side and includes a fixed case checked against the notebook. See the [user guide](USER_GUIDE.md) for controls and verification commands.
 
 ## References, AI assistance and licence
 
