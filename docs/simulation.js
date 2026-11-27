@@ -71,6 +71,7 @@
     const berth = stops.map(() => null);
     const lastLinkArrival = meanTimes.map(() => -Infinity);
     const visits = input.dispatches.map(() => []);
+    const roadDelays = input.dispatches.map(() => []);
     const onboard = input.dispatches.map(() => []);
     const riders = input.trips.map(([arrival, origin, destination]) => ({
       arrival, origin, destination, board: null, alight: null, bus: null,
@@ -128,6 +129,7 @@
           arrival: time,
           approach: control?.approach ?? time,
           ready: control?.ready ?? time,
+          roadDelay: roadDelays[id][stop] ?? 0,
         };
         queue.push(id);
         if (berth[stop] === null && queue.length === 1) schedule(time, "service", id, stop);
@@ -163,7 +165,9 @@
           const disruption = input.disruption;
           const shock = disruption && disruption.bus === id && disruption.link === stop
             ? disruption.seconds : 0;
-          const arrival = Math.max(time + input.runningTimes[id][stop] + shock, lastLinkArrival[stop] + 1);
+          const freeArrival = time + input.runningTimes[id][stop] + shock;
+          const arrival = Math.max(freeArrival, lastLinkArrival[stop] + 1);
+          roadDelays[id][stop + 1] = shock + (arrival - freeArrival);
           lastLinkArrival[stop] = arrival;
           schedule(arrival, stop + 1 === market && holdCap > 0 ? "controlArrival" : "bus", id, stop + 1);
         }
@@ -190,15 +194,25 @@
     };
   }
 
-  function snapshot(run, time, bus, stop) {
+  function passengerCounts(run, time) {
+    const waiting = stops.map(() => 0);
+    const onboard = run.visits.map(() => 0);
+    for (const rider of run.riders) {
+      if (rider.arrival <= time && time < rider.board) waiting[rider.origin]++;
+      if (rider.board <= time && time < rider.alight) onboard[rider.bus]++;
+    }
+    return { waiting, onboard };
+  }
+
+  function snapshot(run, time, bus, stop, counts = passengerCounts(run, time)) {
     const visits = run.visits.map(route => route[stop]);
     const recentVisits = visits.filter(v => v.serviceStart <= time)
       .sort((a, b) => a.serviceStart - b.serviceStart);
     const departures = visits.filter(v => v.departure <= time)
       .map(v => v.departure).sort((a, b) => a - b);
     return {
-      waiting: run.riders.filter(p => p.origin === stop && p.arrival <= time && time < p.board).length,
-      onboard: run.riders.filter(p => p.bus === bus && p.board <= time && time < p.alight).length,
+      waiting: counts.waiting[stop],
+      onboard: counts.onboard[bus],
       berthQueue: visits.filter(v => v.arrival <= time && time < v.serviceStart).length,
       upstreamQueue: visits.filter(v => v.approach <= time && time < v.ready).length,
       lastBoarded: recentVisits.at(-1)?.boarded ?? null,
@@ -206,7 +220,7 @@
     };
   }
 
-  const api = { stops, distance, referenceInputs, sampledInputs, simulate, metrics, snapshot };
+  const api = { stops, distance, referenceInputs, sampledInputs, simulate, metrics, passengerCounts, snapshot };
   globalThis.BusCorridor = api;
   if (typeof module !== "undefined") module.exports = api;
 })();
