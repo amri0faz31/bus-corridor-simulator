@@ -23,19 +23,42 @@ assert.equal(reference.published.inputs.disruption, null);
 const fixture = reference.published.inputs;
 assert.deepEqual(model.simulate(fixture, 0, 0), model.simulate(fixture));
 
+const disrupted = model.simulate(model.referenceInputs());
+const beforeMarketService = model.snapshot(disrupted, 420, 4, 1);
+assert.equal(beforeMarketService.waiting, 23);
+const duringMarketService = model.snapshot(disrupted, 430, 4, 1);
+assert.equal(duringMarketService.waiting, 1);
+assert.equal(duringMarketService.lastBoarded, 23);
+assert.equal(duringMarketService.onboard, 6);
+assert.equal(duringMarketService.berthQueue, 1);
+assert.equal(model.snapshot(disrupted, Infinity, 4, 1).onboard, 0);
+
+const shortDispatches = [0, 10, 11, 100];
+const shortRun = model.simulate({
+  dispatches: shortDispatches, trips: [], runningTimes: shortDispatches.map(() => [1, 10, 10, 10, 10]),
+}, 20);
+assert.equal(model.snapshot(shortRun, 25, 2, 1).upstreamQueue, 1);
+assert.equal(model.snapshot(shortRun, 25, 2, 1).berthQueue, 0);
+
 for (const demand of [0.6, 1, 1.75]) {
   for (const cv of [0.15, 0.45]) {
     const input = model.sampledInputs(demand, cv, 42);
     assert.deepEqual(input, model.sampledInputs(demand, cv, 42));
-    const baseline = model.simulate(input);
-    const faster = model.simulate(input, 0, 0.20);
-    assert.equal(model.metrics(faster).completed, input.trips.length);
-    for (const cap of [0, 10, 20, 40]) {
-      const held = model.simulate(input, cap);
-      assert.equal(model.metrics(held).completed, model.metrics(baseline).completed);
-      assert.equal(model.metrics(held).completed, input.trips.length);
-      if (cap === 0) assert.deepEqual(held, baseline);
+    const wider = model.sampledInputs(demand, cv, 42, 100);
+    assert.equal(wider.dispatches[1] - wider.dispatches[0], 100);
+    assert.deepEqual(wider.trips, input.trips);
+    assert.deepEqual(wider.runningTimes, input.runningTimes);
+    for (const preview of [input, wider]) {
+      const baseline = model.simulate(preview);
+      const faster = model.simulate(preview, 0, 0.20);
+      assert.equal(model.metrics(faster).completed, preview.trips.length);
+      for (const cap of [0, 10, 20, 40]) {
+        const held = model.simulate(preview, cap);
+        assert.equal(model.metrics(held).completed, model.metrics(baseline).completed);
+        assert.equal(model.metrics(held).completed, preview.trips.length);
+        if (cap === 0) assert.deepEqual(held, baseline);
+      }
     }
   }
 }
-console.log("PASS: five notebook reference runs, zero boarding improvement, and all 24 preview settings.");
+console.log("PASS: five notebook reference runs, live passenger and queue counts, and all 48 preview settings.");
