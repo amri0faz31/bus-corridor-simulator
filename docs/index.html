@@ -4,20 +4,51 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Bus Corridor Simulator</title>
-  <style>
-    body { font-family: system-ui, sans-serif; line-height: 1.5; margin: 3rem auto; max-width: 42rem; padding: 0 1.25rem; }
-    ol { display: flex; gap: 1.25rem; flex-wrap: wrap; padding-left: 1.5rem; }
-  </style>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="simulation.js"></script>
+  <script defer src="reference.js"></script>
+  <script defer src="demo.js"></script>
 </head>
 <body>
   <main>
-    <h1>Bus Corridor Simulator</h1>
-    <p>A model of passenger waiting and bus queues on a one-way urban route.</p>
-    <h2>Route</h2>
-    <ol aria-label="Route order"><li>Origin</li><li>Market</li><li>School</li><li>Junction</li><li>Health Centre</li><li>Terminal</li></ol>
-    <h2>Reference experiment</h2>
-    <p>Ten buses run through six stops. A matched run adds a temporary road delay to Bus 4 to show how the next bus can catch up.</p>
-    <p>The reference case runs in the Python notebook. Interactive playback is in development.</p>
+    <header>
+      <p class="eyebrow">URBAN TRANSIT SIMULATION</p>
+      <h1>Bus Corridor Simulator</h1>
+      <p>Follow ten buses along the same six stops. Compare immediate departures with capped holding before Market.</p>
+    </header>
+
+    <section class="controls" aria-label="Experiment controls">
+      <div class="fields">
+        <label for="demand">Passenger demand
+          <select id="demand"><option value="reference" disabled hidden>Fixed reference</option><option value="0.60">Low · 0.60×</option><option value="1" selected>Medium · 1×</option><option value="1.75">High · 1.75×</option></select>
+        </label>
+        <label for="variability">Travel-time variability
+          <select id="variability"><option value="reference" disabled hidden>Fixed reference</option><option value="0.15">Low · CV 0.15</option><option value="0.45">High · CV 0.45</option></select>
+        </label>
+        <label for="cap">Maximum hold
+          <select id="cap"><option value="0">0 seconds</option><option value="10">10 seconds</option><option value="20" selected>20 seconds</option><option value="40">40 seconds</option></select>
+        </label>
+      </div>
+      <div class="actions">
+        <button id="start" class="primary" type="button">Start</button>
+        <button id="pause" type="button">Pause</button>
+        <button id="reset" type="button">Reset</button>
+        <button id="reference" type="button">Load notebook reference</button>
+      </div>
+    </section>
+
+    <section aria-label="Live simulations">
+      <div class="clock"><span id="status" role="status">Ready</span><span id="clock">0:00</span></div>
+      <div id="lanes"></div>
+      <p class="caption">Live averages include completed trips so far. Both panels start from the same passenger and travel-time inputs.</p>
+    </section>
+
+    <details open>
+      <summary>About and how to use</summary>
+      <p>Choose demand, running-time variability, and a maximum hold. Start advances both simulations together. The base scenario uses no holding. The other panel tries for an 80-second release gap before Market.</p>
+      <p>Circles are buses. A ring marks one waiting for the Market berth. An orange circle marks a bus waiting at the control point. The chart position between stops is interpolated from event timestamps.</p>
+      <p>Use <strong>Load notebook reference</strong> to replay the exact deterministic disruption from the notebook. The reference check compares completed trips and recorded timings. The random preview uses one browser-seeded run. The notebook uses repeated paired runs for confidence intervals.</p>
+    </details>
   </main>
 </body>
 </html>

@@ -1,0 +1,17 @@
+globalThis.CORRIDOR_REFERENCE = {
+  "tolerance_seconds": 1e-07,
+  "policies": {
+    "baseline": {
+      "completed": 296,
+      "platform_wait": 83.74315202702701,
+      "journey_time": 382.176929054054,
+      "bus5_market_berth_wait": 57.90100000000001
+    },
+    "holding": {
+      "completed": 296,
+      "platform_wait": 84.28369256756756,
+      "journey_time": 382.6321182432432,
+      "bus5_market_berth_wait": 37.90100000000001
+    }
+  }
+};
