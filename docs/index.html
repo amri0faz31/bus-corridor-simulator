@@ -29,7 +29,7 @@
         <summary>Scenario settings</summary>
         <div class="fields">
           <label for="traffic-delay">Bus 1 road delay
-            <select id="traffic-delay"><option value="0">None</option><option value="120">2 min</option><option value="240" selected>4 min</option><option value="360">6 min</option></select>
+            <select id="traffic-delay"><option value="0">None</option><option value="120" selected>2 min</option><option value="240">4 min</option><option value="360">6 min</option></select>
           </label>
           <label for="demand">Passenger demand
             <select id="demand"><option>Low</option><option selected>Medium</option><option>High</option></select>
@@ -38,7 +38,7 @@
       </details>
     </section>
     <div class="clock"><span id="dispatches"></span><output id="clock" aria-live="off">0:00:00</output></div>
-    <p class="legend"><span class="legend-traffic">Road delay</span><span class="legend-holding">Holding</span><span class="legend-waiting">Queueing</span></p>
+    <p class="legend"><span class="legend-traffic">Bus 1 disruption</span><span class="legend-following">No-passing delay</span><span class="legend-holding">Holding</span><span class="legend-waiting">Queueing</span></p>
     <div id="lanes"></div>
     <p id="event" role="status"></p>
     <section id="results" hidden>
@@ -52,7 +52,7 @@
     <details>
       <summary>About / How to use</summary>
       <p>Choose a hold cap and press Start. The charts share a clock. Sloped lines show travelling and flat lines show waiting or serving passengers. The two School gaps are measured when buses start boarding.</p>
-      <p>Each stop serves one bus at a time. Passengers who are waiting can board at the start of service. New passengers arrive until Bus 3 dispatches at 13 minutes. All admitted passengers finish their journeys.</p>
+      <p>Each stop serves one bus at a time. Passengers board and alight at the start of service, when the counts update. New passengers arrive until Bus 3 dispatches at 9 minutes. All admitted passengers finish their journeys.</p>
       <p>Only Bus 2 can be deliberately held. Riders already aboard spend that time waiting. The table reports Hold Bus 2 minus No holding for the same riders. The notebook estimates the average effects across repeated matched runs.</p>
       <p id="reference-status"></p>
     </details>

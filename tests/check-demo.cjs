@@ -12,7 +12,8 @@ const input = {
   disruption: { bus: 0, link: 0, seconds: reference.defaults.delay },
 };
 assert.deepEqual(model.stops, ["Origin", "Market", "School", "Terminal"]);
-assert.deepEqual(input.dispatches, [60, 420, 780]);
+assert.deepEqual(input.dispatches, [60, 300, 540]);
+assert.equal(input.targetGap, 240);
 const close = (actual, expected) => assert(Math.abs(actual - expected) <= reference.tolerance_seconds,
   actual + " differs from " + expected);
 for (const [policy, cap] of [["baseline", 0], ["holding", reference.defaults.cap]]) {
@@ -28,18 +29,39 @@ for (const [policy, cap] of [["baseline", 0], ["holding", reference.defaults.cap
     assert.deepEqual(trackFrame(track, 0), { trail: [], current: null });
     assert.equal(trackFrame(track, Infinity).current, null);
     assert.equal(track.segments.filter(s => s.state === "holding").length, index === 1 && cap ? 1 : 0);
+    assert.equal(track.segments.filter(s => s.state === "shock").length, index === 0 ? 1 : 0);
     for (let segment = 1; segment < track.segments.length; segment++) {
       const before = track.segments[segment - 1], after = track.segments[segment];
       close(before.to, after.from);
       close(before.toPosition, after.fromPosition);
     }
   }
+  for (const time of new Set(run.riders.flatMap(rider =>
+    [rider.arrival, rider.board - 1e-6, rider.board, rider.alight - 1e-6, rider.alight]))) {
+    const counts = model.passengerCounts(run, time);
+    const waiting = counts.waiting.reduce((sum, n) => sum + n, 0);
+    const aboard = counts.aboard.reduce((sum, n) => sum + n, 0);
+    assert.equal(counts.arrived, waiting + aboard + counts.completed);
+  }
+  const rider = { arrival: 1, board: 2, alight: 3, origin: 1, bus: 1 };
+  const single = { visits: run.visits, riders: [rider] };
+  assert.equal(model.passengerCounts(single, 2 - 1e-6).waiting[1], 1);
+  assert.equal(model.passengerCounts(single, 2).waiting[1], 0);
+  assert.equal(model.passengerCounts(single, 2).aboard[1], 1);
+  assert.equal(model.passengerCounts(single, 3 - 1e-6).aboard[1], 1);
+  assert.equal(model.passengerCounts(single, 3).aboard[1], 0);
+  assert.equal(model.passengerCounts(single, 3).completed, 1);
 }
 for (const trips of Object.values(reference.trips)) {
   for (const delay of [0, 120, 240, 360]) {
     const selected = { ...input, trips, disruption: { ...input.disruption, seconds: delay } };
     const baseline = model.simulate(selected);
-    assert.deepEqual(model.simulate(selected, 0), baseline);
+    const zero = model.simulate(selected, 0, true);
+    assert.equal(zero.controlReleases, 3);
+    assert.equal(baseline.controlReleases, 0);
+    assert.deepEqual(zero.visits, baseline.visits);
+    assert.deepEqual(zero.riders, baseline.riders);
+    assert.equal(zero.end, baseline.end);
     for (const cap of [20, 40, 60]) {
       const held = model.simulate(selected, cap);
       assert.deepEqual(held.riders.map(p => [p.arrival, p.origin, p.destination]),
@@ -50,4 +72,4 @@ for (const trips of Object.values(reference.trips)) {
     }
   }
 }
-console.log("PASS: School boarding times, passenger parity, zero cap, and 48 control combinations.");
+console.log("PASS: School boarding times, count boundaries, enabled zero cap, and 48 control combinations.");

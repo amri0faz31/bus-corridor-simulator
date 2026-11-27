@@ -2,7 +2,8 @@
 
 const busColors = ["#126681", "#76529b", "#3a7760"];
 const eventStyles = {
-  traffic: { fill: "#facc15", outline: "#755b12" },
+  shock: { fill: "#facc15", outline: "#755b12" },
+  following: { fill: "#c4b5fd", outline: "#5b4283" },
   holding: { fill: "#a3e635", outline: "#41651c" },
   upstream: { fill: "#60a5fa", outline: "#23519b" },
   waiting: { fill: "#60a5fa", outline: "#23519b" },
@@ -16,7 +17,7 @@ function busTrack(visits, index, positions) {
   visits.forEach((visit, stop) => {
     const position = positions[stop];
     if (stop > 0) {
-      const state = visit.roadDelay > 0 ? "traffic" : "moving";
+      const state = visit.imposedDelay > 0 ? "shock" : visit.noPassingDelay > 0 ? "following" : "moving";
       add(visits[stop - 1].departure, visit.approach, positions[stop - 1], position, stop, state);
     }
     add(visit.approach, visit.ready, position, position, stop, "upstream");
@@ -41,7 +42,7 @@ function trackFrame(track, time) {
   return { trail, current: null };
 }
 
-function drawTimeDistance(canvas, buses, time, axisMinutes) {
+function drawTimeDistance(canvas, buses, time, axisMinutes, counts) {
   const { width, height } = canvas.getBoundingClientRect();
   if (!width || !height) return [];
   const scale = window.devicePixelRatio || 1;
@@ -55,7 +56,7 @@ function drawTimeDistance(canvas, buses, time, axisMinutes) {
   ctx.setTransform(pixelWidth / width, 0, 0, pixelHeight / height, 0, 0);
   ctx.clearRect(0, 0, width, height);
 
-  const left = 76, right = width - 18, top = 39, bottom = height - 44;
+  const left = 126, right = width - 18, top = 39, bottom = height - 44;
   const positions = BusCorridor.stops.map((_, i) => i);
   const x = seconds => left + (right - left) * seconds / (60 * axisMinutes);
   const y = position => bottom - (bottom - top) * position / positions.at(-1);
@@ -80,7 +81,8 @@ function drawTimeDistance(canvas, buses, time, axisMinutes) {
     ctx.font = highlighted ? "bold 11px system-ui, sans-serif" : "11px system-ui, sans-serif";
     ctx.fillStyle = "#152a36";
     ctx.textAlign = "right";
-    ctx.fillText(name, left - 7, row);
+    const label = index < positions.length - 1 ? name + " · " + counts.waiting[index] + " waiting" : name;
+    ctx.fillText(label, left - 7, row, left - 12);
   });
   ctx.font = "11px system-ui, sans-serif";
   for (let minute = 0; minute <= axisMinutes; minute += axisMinutes / 5) {
@@ -96,7 +98,7 @@ function drawTimeDistance(canvas, buses, time, axisMinutes) {
   ctx.textAlign = "left";
   ctx.fillText("Stops in route order", left, 12);
   ctx.textAlign = "center";
-  ctx.fillText("Time since first dispatch (h:mm)", (left + right) / 2, height - 9);
+  ctx.fillText("Elapsed time (h:mm)", (left + right) / 2, height - 9);
   line(x(time), top - 7, x(time), bottom, "#8d9da5");
 
   const frames = buses.map(bus => ({ bus, ...trackFrame(bus, time) }));
@@ -123,7 +125,9 @@ function drawTimeDistance(canvas, buses, time, axisMinutes) {
   const dots = frames.filter(frame => frame.trail.length).map(({ bus, current, trail }) => {
     const endpoint = current || trail.at(-1);
     const style = eventStyles[endpoint.state] || { fill: bus.color, outline: "#fff" };
-    return { x: x(endpoint.to), y: y(endpoint.toPosition), number: bus.number, style, active: Boolean(current) };
+    return { x: x(endpoint.to), y: y(endpoint.toPosition), style,
+      label: "B" + bus.number + (current ? " · " + counts.aboard[bus.number - 1] + " aboard" : ""),
+      active: Boolean(current) };
   });
   drawBusLabels(ctx, dots, left, right, line);
 }
@@ -132,15 +136,16 @@ function drawBusLabels(ctx, dots, left, right, line) {
   const positioned = [];
   ctx.font = "bold 10px system-ui, sans-serif";
   for (const dot of dots) {
-    const label = "B" + dot.number;
+    const label = dot.label;
     const half = Math.ceil(ctx.measureText(label).width / 2) + 4;
     let position;
     // The dot stays on the trajectory. Only its text can move to make room.
-    for (const offset of [17, 34, 51, -17, -34]) {
+    for (const offset of [17, 34, 51, 68, -17, -34, -51]) {
       for (const horizontal of [0, -1, 1, -2, 2]) {
         const x = Math.max(left + half, Math.min(right - half, dot.x + horizontal * (2 * half + 4)));
         const y = dot.y - offset;
-        if (y < 25 || positioned.some(p => Math.abs(y - p.y) < 16 && Math.abs(x - p.x) < half + p.half + 3)) continue;
+        if (y < 25 || y > ctx.canvas.clientHeight - 24
+          || positioned.some(p => Math.abs(y - p.y) < 16 && Math.abs(x - p.x) < half + p.half + 3)) continue;
         if (dots.some(other => Math.abs(other.y - y) < 11 && Math.abs(other.x - x) < half + 5)) continue;
         position = { x, y, half, label, dot };
         break;

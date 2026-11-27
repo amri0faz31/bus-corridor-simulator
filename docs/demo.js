@@ -4,7 +4,7 @@ const model = BusCorridor;
 const reference = CORRIDOR_REFERENCE;
 const $ = id => document.getElementById(id);
 const controls = ["cap", "traffic-delay", "demand"];
-const playbackRate = 32;
+const playbackRate = 26;
 let lanes = [];
 let elapsed = 0;
 let duration = 0;
@@ -35,7 +35,7 @@ function makeLane(label, run) {
   chart.setAttribute("aria-label", label + " time–distance diagram for buses 1, 2 and 3");
   $("lanes").append(section);
   return {
-    chart, tracks: run.visits.map((route, index) => busTrack(route, index, [0, 1, 2, 3])),
+    run, chart, tracks: run.visits.map((route, index) => busTrack(route, index, [0, 1, 2, 3])),
     metrics: model.metrics(run), gaps: section.querySelectorAll("dd"), market: run.visits[1][1],
   };
 }
@@ -47,14 +47,19 @@ function updateText(element, value) {
 function draw() {
   updateText($("clock"), clockTime(elapsed));
   for (const lane of lanes) {
-    drawTimeDistance(lane.chart, lane.tracks, elapsed, axisMinutes);
+    drawTimeDistance(lane.chart, lane.tracks, elapsed, axisMinutes, model.passengerCounts(lane.run, elapsed));
     const board = lane.metrics.school_boarding;
     lane.gaps.forEach((element, index) => updateText(element, elapsed >= board[index + 1]
       ? minutesSeconds(board[index + 1] - board[index]) : "—"));
   }
   const held = lanes[1];
-  updateText($("event"), held && elapsed >= held.market.ready
-    ? "Bus 2 held for " + Number(held.metrics.bus2_hold.toFixed(2)) + " s before Market." : "");
+  let message = "";
+  if (held && elapsed >= held.market.ready) {
+    const seconds = Number(held.metrics.bus2_hold.toFixed(2));
+    message = elapsed < held.market.arrival ? "Holding Bus 2 before Market…"
+      : "Bus 2 held for " + seconds + " s before Market.";
+  }
+  updateText($("event"), message);
 }
 
 function pause() {
@@ -114,7 +119,7 @@ function prepare() {
   $("dispatches").textContent = input.dispatches.map((time, index) => "B" + (index + 1) + " at "
     + time / 60 + " min").join(" · ");
   const baseline = model.simulate(input);
-  const held = model.simulate(input, cap);
+  const held = model.simulate(input, cap, true);
   $("lanes").replaceChildren();
   lanes = [makeLane("No holding", baseline), makeLane("Hold Bus 2", held)];
   duration = Math.max(baseline.end, held.end);
@@ -155,4 +160,7 @@ $("pause").addEventListener("click", pause);
 $("reset").addEventListener("click", reset);
 for (const id of controls) $(id).addEventListener("change", prepare);
 window.addEventListener("resize", draw);
+$("traffic-delay").value = reference.defaults.delay;
+$("demand").value = reference.defaults.demand;
+$("cap").value = reference.defaults.cap;
 prepare();

@@ -7,14 +7,14 @@
   const middleBus = 1; // Zero-based Bus 2.
   const priority = { release: 0, passenger: 1, controlArrival: 2, controlRelease: 3, bus: 4, service: 5 };
 
-  function simulate(input, holdCap = 0) {
+  function simulate(input, holdCap = 0, controlEnabled = holdCap > 0) {
     const calendar = [];
     const busQueues = stops.map(() => []);
     const passengerQueues = stops.map(() => []);
     const berth = stops.map(() => null);
     const lastLinkArrival = stops.slice(1).map(() => -Infinity);
     const visits = input.dispatches.map(() => []);
-    const roadDelays = input.dispatches.map(() => []);
+    const roadTimings = input.dispatches.map(() => []);
     const onboard = input.dispatches.map(() => []);
     const riders = input.trips.map(([arrival, origin, destination]) => ({
       arrival, origin, destination, board: null, alight: null, bus: null,
@@ -23,6 +23,7 @@
     const controlTimes = [];
     let activeControlBus = null;
     let previousRelease = null;
+    let controlReleases = 0;
     const targetGap = input.targetGap;
 
     function schedule(time, type, id, stop) {
@@ -63,6 +64,7 @@
         controlQueue.push(id);
         decide(time);
       } else if (type === "controlRelease") {
+        controlReleases++;
         previousRelease = time;
         activeControlBus = null;
         schedule(time, "bus", id, stop);
@@ -73,7 +75,7 @@
           arrival: time,
           approach: control?.approach ?? time,
           ready: control?.ready ?? time,
-          roadDelay: roadDelays[id][stop] ?? 0,
+          ...roadTimings[id][stop],
         };
         queue.push(id);
         if (berth[stop] === null && queue.length === 1) schedule(time, "service", id, stop);
@@ -110,15 +112,15 @@
             ? disruption.seconds : 0;
           const freeArrival = time + input.runningTimes[id][stop] + shock;
           const arrival = Math.max(freeArrival, lastLinkArrival[stop] + 1);
-          roadDelays[id][stop + 1] = shock + (arrival - freeArrival);
+          roadTimings[id][stop + 1] = { imposedDelay: shock, noPassingDelay: arrival - freeArrival };
           lastLinkArrival[stop] = arrival;
-          schedule(arrival, stop + 1 === market && holdCap > 0 ? "controlArrival" : "bus", id, stop + 1);
+          schedule(arrival, stop + 1 === market && controlEnabled ? "controlArrival" : "bus", id, stop + 1);
         }
       }
     }
     if (riders.some(p => p.alight === null)) throw new Error("Service ended before every passenger completed.");
     return {
-      visits, riders,
+      visits, riders, controlReleases,
       end: Math.max(...visits.map(bus => bus.at(-1).departure)),
     };
   }
@@ -135,7 +137,22 @@
     };
   }
 
-  const api = { stops, simulate, metrics };
+  function passengerCounts(run, time) {
+    const waiting = stops.map(() => 0);
+    const aboard = run.visits.map(() => 0);
+    let arrived = 0;
+    let completed = 0;
+    for (const rider of run.riders) {
+      if (time < rider.arrival) continue;
+      arrived++;
+      if (time < rider.board) waiting[rider.origin]++;
+      else if (time < rider.alight) aboard[rider.bus]++;
+      else completed++;
+    }
+    return { waiting, aboard, arrived, completed };
+  }
+
+  const api = { stops, simulate, metrics, passengerCounts };
   globalThis.BusCorridor = api;
   if (typeof module !== "undefined") module.exports = api;
 })();
