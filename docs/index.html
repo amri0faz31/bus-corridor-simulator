@@ -14,7 +14,7 @@
   <main>
     <header>
       <h1>Bus Corridor Simulator</h1>
-      <p>See when holding before Market reduces passenger delay on a six-stop corridor.</p>
+      <p>Follow three buses and compare what happens when Bus 2 is delayed.</p>
     </header>
 
     <section class="controls" aria-label="Playback and scenario controls">
@@ -27,40 +27,33 @@
         </label>
       </div>
       <details class="options">
-        <summary>Scenario options</summary>
+        <summary>Change the experiment</summary>
         <div class="fields">
           <label for="demand">Passenger demand
-            <select id="demand"><option value="reference" disabled hidden>Fixed reference</option><option value="0.60">Low · 0.60×</option><option value="1" selected>Medium · 1×</option><option value="1.75">High · 1.75×</option></select>
+            <select id="demand"><option value="0.60">Low</option><option value="1" selected>Medium</option><option value="1.75">High</option></select>
           </label>
-          <label for="variability">Travel-time variability
-            <select id="variability"><option value="reference" disabled hidden>Fixed reference</option><option value="0.15">Low · CV 0.15</option><option value="0.45">High · CV 0.45</option></select>
+          <label for="traffic-delay">Traffic delay for Bus 2
+            <select id="traffic-delay"><option value="0">None</option><option value="120">2 min</option><option value="240" selected>4 min</option></select>
           </label>
           <label for="cap">Maximum hold
-            <select id="cap"><option value="0">0 s</option><option value="10">10 s</option><option value="20" selected>20 s</option><option value="40">40 s</option></select>
+            <select id="cap"><option value="0">0 s</option><option value="20" selected>20 s</option><option value="60">1 min</option></select>
           </label>
-          <label for="dispatch-gap">Preview departure gap
-            <select id="dispatch-gap"><option value="80">1 min 20 s</option><option value="100">1 min 40 s</option><option value="120" selected>2 min</option></select>
-          </label>
-          <label for="vehicle-view">Buses shown
-            <select id="vehicle-view"><option value="focus" selected>Buses 3–5</option><option value="all">All ten buses</option></select>
+          <label for="dispatch-gap">Scheduled departure gap
+            <select id="dispatch-gap"><option value="360" selected>6 min</option><option value="480">8 min</option><option value="600">10 min</option></select>
           </label>
         </div>
-        <label class="supplement"><input type="checkbox" id="faster-boarding"> Include faster boarding comparison</label>
-        <button id="reference" type="button">Published-parameter replay</button>
-        <button id="disruption" type="button">Original road disruption</button>
+        <button id="reference" type="button">Restore notebook example</button>
       </details>
     </section>
 
     <section aria-label="Live simulations">
       <div class="clock"><span id="scenario"></span><span id="status" role="status">Ready</span></div>
+      <p id="dispatches" class="dispatches"></p>
+      <p id="arrivals" class="arrivals"></p>
       <div class="timeline">
         <label for="seek">Jump to time</label>
         <input type="range" id="seek" min="0" max="0" step="any" value="0">
         <output id="clock" for="seek" aria-live="off">0:00:00</output>
-      </div>
-      <div class="inspectors">
-        <label for="inspect-stop">Inspect stop <select id="inspect-stop"></select></label>
-        <label for="inspect-bus">Inspect bus <select id="inspect-bus"></select></label>
       </div>
       <p class="legend"><span class="legend-traffic">Road delay</span><span class="legend-holding">Holding before Market</span><span class="legend-waiting">Bus queueing</span></p>
       <div id="lanes"></div>
@@ -70,8 +63,8 @@
     <details>
       <summary>About these runs</summary>
       <p>All panels share the same bus schedule, passengers and road travel times. At 1×, one real second advances the clock by one simulated second.</p>
-      <p>Rising lines show travel between stops. Flat lines show time spent at a stop or its approach. Yellow marks a road leg affected by the injected disruption or the no-passing rule. Light green marks deliberate holding. Blue marks queuing.</p>
-      <p>The preview dispatches buses every 2 min by default. The notebook experiment and both replays use 1 min 20 s. Holding aims for a 1 min 20 s release gap before Market.</p>
+      <p>Rising lines show buses travelling. Flat lines show time at a stop or its approach. Yellow marks road delay, light green marks deliberate holding and blue marks queueing.</p>
+      <p>Holding aims to keep release gaps before Market close to the scheduled departure gap. Random passengers arrive until Bus 3 dispatches. The buses then finish serving those passengers.</p>
       <p>Counts update at passenger arrivals and at the start of boarding or alighting. Platform waits average boarded passengers, and journey times average completed trips.</p>
     </details>
   </main>

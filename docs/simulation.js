@@ -33,6 +33,16 @@
   }
 
   function sampledInputs(demand, cv, seed, dispatchGap = 80) {
+    return randomInputs(demand, cv, seed, dispatches.map((_, bus) => bus * dispatchGap), 635);
+  }
+
+  function threeBusInputs(demand, cv, seed, gap, delay) {
+    const schedule = [60, 60 + gap, 60 + 2 * gap];
+    const inputs = randomInputs(0.35 * demand, cv, seed, schedule, schedule.at(-1));
+    return { ...inputs, targetGap: gap, disruption: delay ? { bus: 1, link: 0, seconds: delay } : null };
+  }
+
+  function randomInputs(demand, cv, seed, schedule, demandEnd) {
     if (!(Number.isFinite(demand) && demand > 0 && Number.isFinite(cv) && cv >= 0)) {
       throw new Error("Demand must be positive and variability nonnegative.");
     }
@@ -42,22 +52,21 @@
     intervals.forEach((interval, origin) => {
       let time = 0;
       let index = 0;
-      while (time < 635) {
+      while (time < demandEnd) {
         time += -Math.log1p(-arrivals()) * interval / demand;
-        if (time < 635) {
+        if (time < demandEnd) {
           trips.push([time, origin, index++ % 3 === 0 ? origin + 1 : stops.length - 1]);
         }
       }
     });
     trips.sort((a, b) => a[0] - b[0]);
     const logVariance = Math.log1p(cv * cv);
-    const previewDispatches = dispatches.map((_, bus) => bus * dispatchGap);
-    const runningTimes = previewDispatches.map(() => publishedMeanTimes.map(mean => {
+    const runningTimes = schedule.map(() => publishedMeanTimes.map(mean => {
       if (cv === 0) return mean;
       const normal = Math.sqrt(-2 * Math.log(travel())) * Math.cos(2 * Math.PI * travel());
       return Math.exp(Math.log(mean) - logVariance / 2 + Math.sqrt(logVariance) * normal);
     }));
-    return { dispatches: previewDispatches, trips, runningTimes, disruption: null };
+    return { dispatches: schedule, trips, runningTimes, disruption: null };
   }
 
   function simulate(input, holdCap = 0, boardingImprovement = 0) {
@@ -80,6 +89,7 @@
     const controlTimes = [];
     let activeControlBus = null;
     let previousRelease = null;
+    const targetGap = input.targetGap ?? 80;
 
     function schedule(time, type, id, stop) {
       const event = { time, type, id, stop };
@@ -102,7 +112,7 @@
       if (activeControlBus !== null || !controlQueue.length) return;
       const bus = controlQueue.shift();
       activeControlBus = bus;
-      const hold = previousRelease === null ? 0 : Math.min(holdCap, Math.max(0, 80 - (now - previousRelease)));
+      const hold = previousRelease === null ? 0 : Math.min(holdCap, Math.max(0, targetGap - (now - previousRelease)));
       controlTimes[bus].ready = now;
       schedule(now + hold, "controlRelease", bus, market);
     }
@@ -190,7 +200,7 @@
       completed: completed.length,
       platform_wait: average(boarded, p => p.board - p.arrival),
       journey_time: average(completed, p => p.alight - p.arrival),
-      bus5_market_berth_wait: run.visits[4][market].serviceStart - run.visits[4][market].arrival,
+      bus5_market_berth_wait: run.visits[4] ? run.visits[4][market].serviceStart - run.visits[4][market].arrival : null,
     };
   }
 
@@ -220,7 +230,7 @@
     };
   }
 
-  const api = { stops, distance, referenceInputs, sampledInputs, simulate, metrics, passengerCounts, snapshot };
+  const api = { stops, distance, referenceInputs, sampledInputs, threeBusInputs, simulate, metrics, passengerCounts, snapshot };
   globalThis.BusCorridor = api;
   if (typeof module !== "undefined") module.exports = api;
 })();

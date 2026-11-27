@@ -24,6 +24,38 @@ assert.equal(reference.published.inputs.disruption, null);
 const fixture = reference.published.inputs;
 assert.deepEqual(model.simulate(fixture, 0, 0), model.simulate(fixture));
 
+const three = reference.three_bus;
+assert.deepEqual(three.inputs.dispatches, [60, 420, 780]);
+assert(three.inputs.trips.some(([time]) => time > 720));
+for (const [policy, cap] of [["baseline", 0], ["holding", 20]]) {
+  const run = model.simulate(three.inputs, cap);
+  const expected = three.policies[policy];
+  const actual = model.metrics(run);
+  assert.equal(actual.completed, three.inputs.trips.length);
+  assert.equal(actual.completed, expected.completed);
+  assert.equal(run.riders.filter(rider => rider.bus === 2).length, expected.bus3_boardings);
+  assert(expected.bus3_boardings > 0);
+  assert(Math.abs(run.visits[2][1].departure - run.visits[1][1].departure - expected.market_departure_gap)
+    <= reference.tolerance_seconds);
+  for (const key of ["platform_wait", "journey_time"]) {
+    assert(Math.abs(actual[key] - expected[key]) <= reference.tolerance_seconds);
+  }
+}
+for (const demand of [0.6, 1, 1.75]) {
+  for (const gap of [360, 480, 600]) {
+    for (const delay of [0, 120, 240]) {
+      const inputs = model.threeBusInputs(demand, 0.15, 42, gap, delay);
+      assert.deepEqual(inputs.dispatches, [60, 60 + gap, 60 + 2 * gap]);
+      assert(inputs.trips.at(-1)[0] > inputs.dispatches[1]);
+      for (const cap of [0, 20, 60]) {
+        const run = model.simulate(inputs, cap);
+        assert.equal(model.metrics(run).completed, inputs.trips.length);
+        assert(run.riders.some(rider => rider.bus === 2));
+      }
+    }
+  }
+}
+
 const disrupted = model.simulate(model.referenceInputs());
 const beforeMarketService = model.snapshot(disrupted, 420, 4, 1);
 assert.equal(beforeMarketService.waiting, 23);
@@ -91,4 +123,4 @@ for (const demand of [0.6, 1, 1.75]) {
     }
   }
 }
-console.log("PASS: five notebook reference runs, continuous trails, live counts, and all 72 preview settings.");
+console.log("PASS: seven notebook reference runs, continuous trails, and all 81 three-bus preview settings.");
