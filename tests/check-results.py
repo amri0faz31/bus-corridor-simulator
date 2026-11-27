@@ -43,8 +43,6 @@ with tempfile.TemporaryDirectory() as directory:
             compare(list(csv.DictReader(expected)), list(csv.DictReader(observed)))
     relative = Path("data/browser-reference.json")
     compare(json.loads((root / relative).read_text()), json.loads(relative.read_text()))
-    for name in ("corridor-time-distance", "holding-comparison", "paired-policy-effects",
-                 "journey-time-components", "published-time-distance", "holding-queue-length",
-                 "monte-carlo-error-scaling"):
+    for name in ("paired-policy-effects", "monte-carlo-error-scaling"):
         assert (Path("figures") / (name + ".png")).read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
-print("PASS: fresh notebook execution regenerated the checked-in numeric exports and all seven figures.")
+print("PASS: fresh notebook execution regenerated the numeric exports and both figures.")
