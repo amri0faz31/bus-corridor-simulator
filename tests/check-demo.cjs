@@ -1,6 +1,7 @@
 "use strict";
 const assert = require("node:assert/strict");
 const model = require("../docs/simulation.js");
+const { busTrack, trackFrame } = require("../docs/time-distance.js");
 const reference = require("../data/browser-reference.json");
 require("../docs/reference.js");
 assert.deepEqual(globalThis.CORRIDOR_REFERENCE, reference);
@@ -32,6 +33,31 @@ assert.equal(duringMarketService.lastBoarded, 23);
 assert.equal(duringMarketService.onboard, 6);
 assert.equal(duringMarketService.berthQueue, 1);
 assert.equal(model.snapshot(disrupted, Infinity, 4, 1).onboard, 0);
+const counts = model.passengerCounts(disrupted, 430);
+assert.equal(counts.waiting[1], 1);
+assert.equal(counts.onboard[4], 6);
+assert.equal(counts.waiting.reduce((a, b) => a + b) + counts.onboard.reduce((a, b) => a + b)
+  + model.metrics(disrupted, 430).completed, disrupted.riders.filter(p => p.arrival <= 430).length);
+
+const delayedTrack = busTrack(disrupted.visits[3], 3, model.distance);
+assert.equal(disrupted.visits[3][1].roadDelay, 100);
+const road = delayedTrack.segments.find(segment => segment.state === "traffic");
+const midpoint = (road.from + road.to) / 2;
+const movingFrame = trackFrame(delayedTrack, midpoint);
+assert.equal(movingFrame.current.to, midpoint);
+assert.equal(movingFrame.current.toPosition, 0.25);
+assert.equal(movingFrame.trail.at(-1), movingFrame.current);
+for (let index = 1; index < delayedTrack.segments.length; index++) {
+  const previous = delayedTrack.segments[index - 1];
+  const next = delayedTrack.segments[index];
+  assert.equal(previous.to, next.from);
+  assert.equal(previous.toPosition, next.fromPosition);
+}
+assert.deepEqual(trackFrame(delayedTrack, 0), { trail: [], current: null });
+assert.equal(trackFrame(delayedTrack, Infinity).current, null);
+const held = model.simulate(model.referenceInputs(), 20);
+const heldTrack = busTrack(held.visits[4], 4, model.distance);
+assert.equal(trackFrame(heldTrack, 430).current.state, "holding");
 
 const shortDispatches = [0, 10, 11, 100];
 const shortRun = model.simulate({
@@ -48,7 +74,11 @@ for (const demand of [0.6, 1, 1.75]) {
     assert.equal(wider.dispatches[1] - wider.dispatches[0], 100);
     assert.deepEqual(wider.trips, input.trips);
     assert.deepEqual(wider.runningTimes, input.runningTimes);
-    for (const preview of [input, wider]) {
+    const widest = model.sampledInputs(demand, cv, 42, 120);
+    assert.equal(widest.dispatches[1] - widest.dispatches[0], 120);
+    assert.deepEqual(widest.trips, input.trips);
+    assert.deepEqual(widest.runningTimes, input.runningTimes);
+    for (const preview of [input, wider, widest]) {
       const baseline = model.simulate(preview);
       const faster = model.simulate(preview, 0, 0.20);
       assert.equal(model.metrics(faster).completed, preview.trips.length);
@@ -61,4 +91,4 @@ for (const demand of [0.6, 1, 1.75]) {
     }
   }
 }
-console.log("PASS: five notebook reference runs, live passenger and queue counts, and all 48 preview settings.");
+console.log("PASS: five notebook reference runs, continuous trails, live counts, and all 72 preview settings.");

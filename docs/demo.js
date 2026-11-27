@@ -63,7 +63,8 @@ function draw() {
     const finishText = elapsed >= run.end ? "Last bus finished at " + formatTime(run.end, true) : "Last bus finish · —";
     updateText(finish, finishText);
     const shown = focusOnly ? tracks.filter((_, i) => focalBuses.has(i)) : tracks;
-    const waitText = drawTimeDistance(chart, shown, elapsed, axisMinutes, mode === "disruption").join(" · ");
+    const counts = model.passengerCounts(run, elapsed);
+    const waitText = drawTimeDistance(chart, shown, elapsed, axisMinutes, mode === "disruption", counts).join(" · ");
     updateText(waitStatus, waitText);
     const measured = model.metrics(run, elapsed);
     for (const target of metrics) {
@@ -72,10 +73,12 @@ function draw() {
         : value === null ? "—" : formatDuration(value);
       updateText(target, label);
     }
-    const state = model.snapshot(run, elapsed, bus, stop);
+    const state = model.snapshot(run, elapsed, bus, stop, counts);
     const upstream = stop === 1 ? " · " + state.upstreamQueue + " queued upstream" : "";
-    updateText(stopInfo, model.stops[stop] + " · " + state.waiting + " passengers waiting · "
-      + state.berthQueue + " buses queued for berth" + upstream);
+    const people = state.waiting === 1 ? " passenger waiting" : " passengers waiting";
+    const buses = state.berthQueue === 1 ? " bus queued for berth" : " buses queued for berth";
+    updateText(stopInfo, model.stops[stop] + " · " + state.waiting + people + " · "
+      + state.berthQueue + buses + upstream);
     updateText(busInfo, "Bus " + (bus + 1) + " · " + state.onboard + " onboard · Last boarding at "
       + model.stops[stop] + " · " + (state.lastBoarded ?? "—"));
     updateText(latestGap, "Latest departure gap · "
@@ -187,7 +190,9 @@ $("pause").addEventListener("click", () => {
 $("reset").addEventListener("click", resetTime);
 $("seek").addEventListener("input", () => {
   pause();
-  elapsed = Number($("seek").value);
+  const requested = Number($("seek").value);
+  // Browsers can round a range edge slightly below the exact simulation end.
+  elapsed = requested + 1e-6 >= duration ? duration : requested;
   draw();
   $("status").textContent = elapsed >= duration ? "All runs complete" : "Paused";
 });

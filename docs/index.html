@@ -39,7 +39,7 @@
             <select id="cap"><option value="0">0 s</option><option value="10">10 s</option><option value="20" selected>20 s</option><option value="40">40 s</option></select>
           </label>
           <label for="dispatch-gap">Preview departure gap
-            <select id="dispatch-gap"><option value="80">1 min 20 s</option><option value="100" selected>1 min 40 s</option></select>
+            <select id="dispatch-gap"><option value="80">1 min 20 s</option><option value="100">1 min 40 s</option><option value="120" selected>2 min</option></select>
           </label>
           <label for="vehicle-view">Buses shown
             <select id="vehicle-view"><option value="focus" selected>Buses 3–5</option><option value="all">All ten buses</option></select>
@@ -62,16 +62,17 @@
         <label for="inspect-stop">Inspect stop <select id="inspect-stop"></select></label>
         <label for="inspect-bus">Inspect bus <select id="inspect-bus"></select></label>
       </div>
-      <p class="legend"><span class="legend-holding">Holding before Market</span><span class="legend-waiting">Bus queueing</span></p>
+      <p class="legend"><span class="legend-traffic">Road delay</span><span class="legend-holding">Holding before Market</span><span class="legend-waiting">Bus queueing</span></p>
       <div id="lanes"></div>
-      <p class="caption">Platform wait uses passengers who have boarded. Journey time uses completed trips. Both averages include all buses.</p>
+      <p class="caption">Numbers by stops count people waiting. Labels above bus dots show the bus number and the number onboard.</p>
     </section>
 
     <details>
       <summary>About these runs</summary>
       <p>All panels share the same bus schedule, passengers and road travel times. At 1×, one real second advances the clock by one simulated second.</p>
-      <p>The preview uses a departure gap of 1 min 40 s by default. The notebook experiment and both replays use 1 min 20 s. Holding always aims for a 1 min 20 s release gap before Market.</p>
-      <p>Published link times come from Herath et al. The original road disruption is a separate replay. Counts update when passengers board or alight at the start of service.</p>
+      <p>Rising lines show travel between stops. Flat lines show time spent at a stop or its approach. Yellow marks a road leg affected by the injected disruption or the no-passing rule. Light green marks deliberate holding. Blue marks queuing.</p>
+      <p>The preview dispatches buses every 2 min by default. The notebook experiment and both replays use 1 min 20 s. Holding aims for a 1 min 20 s release gap before Market.</p>
+      <p>Counts update at passenger arrivals and at the start of boarding or alighting. Platform waits average boarded passengers, and journey times average completed trips.</p>
     </details>
   </main>
 </body>

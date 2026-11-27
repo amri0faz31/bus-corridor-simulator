@@ -33,7 +33,9 @@ button:disabled { opacity: .46; cursor: default; }
 .inspectors label { display: flex; align-items: center; gap: 6px; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0 0 10px; color: var(--slate); font-size: .86rem; }
 .legend span::before { content: ""; display: inline-block; width: .68em; height: .68em; border-radius: 50%; background: var(--key); margin-right: .4em; }
-.legend-holding { --key: var(--copper); }
+.legend-traffic { --key: #facc15; }
+.legend-holding { --key: #a3e635; }
+.legend-traffic::before, .legend-holding::before { box-shadow: 0 0 0 1px #526671; }
 .legend-waiting { --key: var(--berth); }
 #lanes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 #lanes.three-policies { grid-template-columns: repeat(3, minmax(0, 1fr)); }
