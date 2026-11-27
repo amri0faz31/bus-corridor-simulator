@@ -1,39 +1,39 @@
 # Bus Corridor Simulator
 
-A discrete-event model of bus service on a straight urban road. The study asks whether changing bus departures at an upstream control point can reduce passenger delay.
+Trace how delays spread between buses on a straight urban road, and measure what passengers experience.
 
-## Start here
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/amri0faz31/bus-corridor-simulator/blob/main/notebook/bus-corridor-simulator.ipynb)
 
-1. Read the model decisions and experiment plan in [THEORY.md](THEORY.md).
-2. Upload [the notebook](notebook/bus-corridor-simulator.ipynb) to Google Colab and select **Runtime → Run all**. The baseline uses the Python standard library.
-3. Compare the event trace against the hand calculation in the notebook.
+## Corridor and reference run
 
-## Road and model
+Origin → Market → School → Junction → Health Centre → Terminal. The example dispatches ten buses along five links. Passengers board at five stops, travel to assigned downstream destinations, and add to dwell as they board or alight. Stop names, distances, demand and running times specify a synthetic scenario.
 
-Origin → Stop 1 → Stop 2 → Terminal
+The notebook compares normal operation with a temporary delay to Bus 4. The same passenger trips and bus schedule feed both runs.
 
-The baseline uses one direction, one bus route and one berth at each boarding stop. The first verified case isolates Stop 1 with two buses and one passenger. The full corridor will track where passengers board, where they leave, and how long they wait.
+![Time–distance diagrams for normal and disrupted service](figures/corridor-time-distance.png)
+
+## Quick start
+
+Open [the notebook](notebook/bus-corridor-simulator.ipynb) in Google Colab via **File → Upload notebook**, then select **Runtime → Run all**. In local Jupyter, install the dependencies in `requirements.txt` first. Running the figure cell writes the plot to `figures/` under the current working directory.
 
 ## Verification
 
-Bus A occupies the berth from 70 to 100 seconds. Bus B arrives at 80 seconds and waits 20 seconds. A passenger arriving at 85 seconds boards at 100 seconds and waits 15 seconds. The notebook also checks FIFO ordering when another bus arrives at the exact moment the berth frees.
+The one-berth fixture checks a 20-second bus wait and FIFO ordering when a berth releases at the same time a bus arrives. A second hand calculation verifies two complete passenger journeys and two consecutive berth queues. Both checks run on the same simulation engine as the six-stop example.
 
-## Concepts applied
+## Model and concepts applied
 
-- Next-event time advance schedules discrete changes without incrementing the clock by a fixed time step.
-- A FIFO bus queue and a one-bus berth impose a resource constraint.
-- Inverse-transform arrivals, lognormal running times and paired Monte Carlo comparisons are planned for the full corridor.
+A next-event clock handles movements, berth ownership and passenger queues. Stops use a linear boarding/alighting dwell model. Service and passenger events provide the time–distance plot and summary measures. See [model equations, assumptions and planned experiments](THEORY.md).
 
-## Results and scope
+## Results and next stage
 
-The current result is a deterministic timing check. The completed study will compare normal departures with capped headway-based departures under matched passenger demand and running times.
+In the reference run, the 100-second delay raises mean platform wait from 64.6 to 83.7 seconds across the same 296 passengers. Bus 5 queues for 57.9 seconds at Market. Mean passenger journey time rises from 327.8 to 382.2 seconds. The reference run is deterministic. The policy experiment will add matched random inputs, capped upstream releases and replication-based confidence intervals.
 
-## Browser demo
+## Browser
 
-[Browser entry point](docs/index.html) · [User guide](USER_GUIDE.md)
+The [browser entry point](docs/index.html) summarises the reference corridor. See [the guide](USER_GUIDE.md) to reproduce the runs and interpret the plot.
 
 ## References, AI assistance and licence
 
 [References](REFERENCES.md) · [Data sources](data/README.md) · [MIT licence](LICENSE)
 
-AI assisted with planning and starter code. The notebook includes hand-calculated cases and executable assertions.
+AI assisted with planning, starter code and documentation. The notebook contains reproducible calculations and executable checks.

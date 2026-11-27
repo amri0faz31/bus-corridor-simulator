@@ -1,3 +1,3 @@
 # Data
 
-The notebook embeds a hand-calculated synthetic reference case in seconds. It is distributed under the project licence. No external dataset is bundled. See [REFERENCES.md](../REFERENCES.md) for the studies that will inform later parameter choices.
+The notebook defines synthetic stop positions, running times, dispatch times, passenger arrival times and destinations. The regular passenger arrival pattern is designed for a reproducible illustration. The dwell-time reference coefficients come from Herath et al.'s rural Kandy study, cited in [REFERENCES.md](../REFERENCES.md). No field measurements are bundled or implied for the modelled route.

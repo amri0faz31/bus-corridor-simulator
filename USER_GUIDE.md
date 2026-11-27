@@ -1,11 +1,7 @@
 # User guide
 
-## Run the baseline reference case
+Upload [the notebook](notebook/bus-corridor-simulator.ipynb) to Colab and select **Runtime → Run all**. The verification cells print results for exact hand checks. The reference corridor cells compare normal service with a temporary running-time delay to Bus 4.
 
-Upload [the Python notebook](notebook/bus-corridor-simulator.ipynb) to Colab, choose **Runtime → Run all**, then read the event trace under **Verification**. A bus waiting for the berth is different from a passenger waiting to board.
+In the two-panel time–distance diagram, scan horizontally along a stop line. The gaps between buses show spacing, and flat segments show queueing plus dwell. Bus 4 and the bus following it are highlighted in both panels. Read the results printed above the diagram to compare mean passenger platform wait, end-to-end journey time and berth wait.
 
-Expected results for Stop 1: Bus A leaves at 100 s, Bus B waits 20 s for the berth, and the passenger boards at 100 s after a 15 s wait.
-
-## Browser entry point
-
-Open [docs/index.html](docs/index.html) locally. It shows the road and describes the reference case. Interactive simulation is planned after the complete baseline corridor is verified.
+The [browser entry point](docs/index.html) summarises the corridor. Interactive playback and policy controls are planned for the next stage.
