@@ -1,16 +1,16 @@
-# Does holding the middle bus help passengers?
+# How much should the middle bus be held?
 
-Follow three buses along a four-stop corridor to see whether briefly holding Bus 2 can reduce passenger delay after Bus 1 runs late.
+After a two-minute delay to Bus 1, compare maximum holds of 0, 20, 40 and 60 seconds for Bus 2. The outcome is mean passenger journey time from arrival at the stop to alighting.
 
 [Open the live demo](https://amri0faz31.github.io/bus-corridor-simulator/)
 
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/amri0faz31/bus-corridor-simulator/blob/main/notebook/bus-corridor-simulator.ipynb)
 
-![Live onboard and waiting passenger counts for the two policies](figures/demo-middle-bus.png)
+![Change in passenger journey time for four maximum holds under six scenarios](figures/hold-cap-response.png)
 
 ## The question
 
-When Bus 1 runs late, how does passenger boarding change bus spacing, and does briefly holding Bus 2 improve passenger journeys? The two runs share three dispatches, the same passengers and the same road-time draws. School boarding gaps show how spacing changes downstream.
+How does the allowed hold affect passenger journeys as demand and road variability change? The 720 runs use 30 matched input sets for each of six scenarios. All four caps share the same dispatches, passengers and road draws within each set. School boarding gaps show how spacing changes downstream.
 
 ## Quick start
 
@@ -20,7 +20,9 @@ When Bus 1 runs late, how does passenger boarding change bus spacing, and does b
 
 ## User guide
 
-Press **Start** to run both charts on a shared clock. Change the **Maximum hold** or open **Scenario settings** to change the road delay and passenger demand. The table appears after both runs finish. [Full guide](USER_GUIDE.md)
+Press **Start** to run both charts on a shared clock. Change the **Maximum hold** or open **Scenario settings** to change the road delay and passenger demand. The final table shows passenger time and how many riders switched from Bus 3 to Bus 2. [Full guide](USER_GUIDE.md)
+
+![Default replay with live passenger counts](figures/demo-middle-bus.png)
 
 ## Model and mathematics
 
@@ -40,7 +42,7 @@ The M/M/1 and fixed-headway benchmarks pass, alongside the hand traces and zero-
 
 ## Results and limitations
 
-A 30-second shock reduced the Market gap by 30 seconds. Passenger-dependent dwell amplified that reduction to 36.12 seconds at School on average. The default 20-second hold increased journeys by 5.81 seconds per passenger. All six paired journey-time intervals crossed zero. The estimates apply to the assumed passenger demand, stop layout, bus schedule and first-link disruption. [Results](RESULTS.md) · [Experiment design](EXPERIMENT_PLAN.md)
+Passenger-dependent dwell amplified a 30-second gap disturbance to 36.12 seconds at School on average. At low road variability, the 20-second cap shortened journeys at medium and high demand. Extending 40 to 60 seconds lengthened journeys at all three demand levels. Under high road variability, all adjacent-cap intervals included zero. Each boarding stop admits passengers only until Bus 3 could first reach it on a free run. This finite-service assumption limits how the findings transfer to a continuously served route. [Results](RESULTS.md) · [Experiment design](EXPERIMENT_PLAN.md)
 
 ## References, AI assistance and credits
 

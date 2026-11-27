@@ -4,8 +4,8 @@
 
 1. Press **Start**. Use **Pause** during the run or **Reset** to return to the start. The default replay takes about **35 seconds**.
 2. Read the passenger labels during playback. **B2 · 8 aboard** is the current onboard count. **Market · 5 waiting** is the current platform count. Yellow marks Bus 1’s imposed delay. Purple marks additional delay from the no-passing rule. Green marks holding and blue marks queueing.
-3. Compare both School boarding gaps as they appear. After both runs finish, use **This run** to compare passenger time. For the default replay, mean journey time increases by **5.81 s per passenger** with holding.
+3. Compare both School boarding gaps as they appear. After both runs finish, use **This run** to compare passenger time. For the default replay, mean journey time increases by **2.04 s per passenger** with the 20-second hold. One rider at School catches Bus 2 instead of Bus 3. Choose 0, 40 or 60 seconds and replay to see how the outcome changes on the same manifest.
 
 ![Default replay with live onboard and waiting passenger counts](figures/demo-middle-bus.png)
 
-**Scenario settings** controls Bus 1’s road delay and passenger demand. **Maximum hold** controls the cap for Bus 2. Restore **2 min**, **Medium** and **20 s** for the default notebook replay. Changing any setting resets both panels. [Research results](RESULTS.md)
+**Scenario settings** controls Bus 1’s road delay and passenger demand. **Maximum hold** controls the cap for Bus 2. Restore **2 min**, **Medium** and **20 s** for the default notebook replay. Changing any setting resets both panels. Market and School admit later arrivals than Origin because Bus 3 still has to travel to those stops. Road variability is fixed at CV 0.15 for this replay. The notebook compares both variability levels across 30 matched inputs per scenario. [Research results](RESULTS.md)
