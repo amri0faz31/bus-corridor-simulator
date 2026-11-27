@@ -38,12 +38,26 @@ with tempfile.TemporaryDirectory() as directory:
             assert not cell.get("outputs"), "Keep generated outputs outside the tracked notebook."
             exec(compile("".join(cell["source"]), f"<notebook cell {index}>", "exec"), scope)
     for name in ("paired-replications.csv", "policy-effects.csv", "monte-carlo-scaling.csv",
-                 "disturbance-propagation.csv"):
+                 "disturbance-propagation.csv", "default-cap-mechanism.csv"):
         relative = Path("data") / name
         with (root / relative).open(newline="") as expected, relative.open(newline="") as observed:
             compare(list(csv.DictReader(expected)), list(csv.DictReader(observed)))
+    with Path("data/paired-replications.csv").open(newline="") as file:
+        records = list(csv.DictReader(file))
+    assert len(records) == 720
+    blocks = {}
+    for record in records:
+        key = record["demand"], record["road_cv"], record["replication"]
+        blocks.setdefault(key, []).append(record)
+        compare(float(record["platform_wait"]) + float(record["onboard_time"]), record["journey_time"])
+        assert 0 <= float(record["bus2_hold"]) <= int(record["cap"])
+    assert len(blocks) == 180
+    for block in blocks.values():
+        assert sorted(int(row["cap"]) for row in block) == [0, 20, 40, 60]
+        assert len({(r["demand_seed"], r["road_seed"], r["completed"]) for r in block}) == 1
+    assert Path("docs/reference.js").read_bytes() == (root / "docs/reference.js").read_bytes()
     relative = Path("data/browser-reference.json")
     compare(json.loads((root / relative).read_text()), json.loads(relative.read_text()))
-    for name in ("paired-policy-effects", "monte-carlo-error-scaling", "analytical-verification"):
+    for name in ("paired-policy-effects", "hold-cap-response", "monte-carlo-error-scaling", "analytical-verification"):
         assert (Path("figures") / (name + ".png")).read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
-print("PASS: fresh notebook execution regenerated the numeric exports and all three scientific figures.")
+print("PASS: fresh notebook execution regenerated the numeric exports and all four scientific figures.")

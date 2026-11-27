@@ -57,7 +57,8 @@ function draw() {
   if (held && elapsed >= held.market.ready) {
     const seconds = Number(held.metrics.bus2_hold.toFixed(2));
     message = elapsed < held.market.arrival ? "Holding Bus 2 before Market…"
-      : "Bus 2 held for " + seconds + " s before Market.";
+      : seconds > 0 ? "Bus 2 held for " + seconds + " s before Market."
+      : "Bus 2 released immediately before Market.";
   }
   updateText($("event"), message);
 }
@@ -80,7 +81,7 @@ function displayResults() {
   const [baseline, held] = lanes.map(lane => lane.metrics);
   const table = $("results").querySelector("tbody");
   table.replaceChildren();
-  for (const [metric, label] of [["platform_wait", "Mean platform wait"], ["journey_time", "Mean total journey time"]]) {
+  for (const [metric, label] of [["platform_wait", "Mean platform wait"], ["onboard_time", "Mean onboard time"], ["journey_time", "Mean total journey time"]]) {
     const row = table.insertRow();
     const heading = document.createElement("th");
     heading.scope = "row";
@@ -93,7 +94,10 @@ function displayResults() {
       row.insertCell().textContent = value;
     }
   }
-  $("cohort").textContent = baseline.completed + " identical passengers completed each run.";
+  const switches = model.caughtBus2(lanes[0].run, lanes[1].run);
+  $("cohort").textContent = baseline.completed + " riders completed both runs. "
+    + (switches.market_switches + switches.school_switches) + " caught Bus 2 instead of Bus 3 ("
+    + switches.market_switches + " at Market, " + switches.school_switches + " at School).";
   $("results").hidden = false;
 }
 
@@ -101,6 +105,8 @@ function matchesReference(actual, expected) {
   const close = (value, target) => Math.abs(value - target) <= reference.tolerance_seconds;
   return actual.completed === expected.completed
     && close(actual.platform_wait, expected.platform_wait)
+    && close(actual.onboard_time, expected.onboard_time)
+    && close(actual.bus2_hold, expected.bus2_hold)
     && close(actual.journey_time, expected.journey_time)
     && actual.school_boarding.every((time, index) => close(time, expected.school_boarding[index]));
 }
@@ -124,14 +130,14 @@ function prepare() {
   lanes = [makeLane("No holding", baseline), makeLane("Hold Bus 2", held)];
   duration = Math.max(baseline.end, held.end);
   axisMinutes = 5 * Math.ceil(duration / 300);
-  const defaults = delay === reference.defaults.delay && cap === reference.defaults.cap
+  const defaults = delay === reference.defaults.delay
     && demand === reference.defaults.demand;
   $("reference-status").textContent = defaults
-    ? (matchesReference(lanes[0].metrics, reference.policies.baseline)
-      && matchesReference(lanes[1].metrics, reference.policies.holding)
-      ? "Default School boarding times and passenger averages match the notebook."
+    ? (matchesReference(lanes[0].metrics, reference.caps[0])
+      && matchesReference(lanes[1].metrics, reference.caps[cap])
+      ? "School boarding times and passenger averages match the notebook for this cap."
       : "Default run did not match the notebook reference.")
-    : "Restore the default controls to check this replay against the notebook.";
+    : "Use medium demand and a two-minute delay to check any cap against the notebook.";
   reset();
 }
 

@@ -16,8 +16,8 @@
     const visits = input.dispatches.map(() => []);
     const roadTimings = input.dispatches.map(() => []);
     const onboard = input.dispatches.map(() => []);
-    const riders = input.trips.map(([arrival, origin, destination]) => ({
-      arrival, origin, destination, board: null, alight: null, bus: null,
+    const riders = input.trips.map(([arrival, origin, destination], id) => ({
+      id, arrival, origin, destination, board: null, alight: null, bus: null,
     }));
     const controlQueue = [];
     const controlTimes = [];
@@ -131,10 +131,23 @@
     return {
       completed: run.riders.length,
       platform_wait: run.riders.reduce((sum, p) => sum + (p.board - p.arrival), 0) / run.riders.length,
+      onboard_time: run.riders.reduce((sum, p) => sum + (p.alight - p.board), 0) / run.riders.length,
       journey_time: run.riders.reduce((sum, p) => sum + (p.alight - p.arrival), 0) / run.riders.length,
       school_boarding: schoolBoarding,
       bus2_hold: approach.arrival - approach.ready,
     };
+  }
+
+  function caughtBus2(baseline, selected) {
+    const previous = new Map(baseline.riders.map(rider => [rider.id, rider.bus]));
+    const counts = { market_switches: 0, school_switches: 0 };
+    for (const rider of selected.riders) {
+      if (previous.get(rider.id) === 2 && rider.bus === middleBus) {
+        if (rider.origin === market) counts.market_switches++;
+        if (rider.origin === school) counts.school_switches++;
+      }
+    }
+    return counts;
   }
 
   function passengerCounts(run, time) {
@@ -152,7 +165,7 @@
     return { waiting, aboard, arrived, completed };
   }
 
-  const api = { stops, simulate, metrics, passengerCounts };
+  const api = { stops, simulate, metrics, passengerCounts, caughtBus2 };
   globalThis.BusCorridor = api;
   if (typeof module !== "undefined") module.exports = api;
 })();

@@ -16,13 +16,26 @@ assert.deepEqual(input.dispatches, [60, 300, 540]);
 assert.equal(input.targetGap, 240);
 const close = (actual, expected) => assert(Math.abs(actual - expected) <= reference.tolerance_seconds,
   actual + " differs from " + expected);
-for (const [policy, cap] of [["baseline", 0], ["holding", reference.defaults.cap]]) {
-  const run = model.simulate(input, cap);
-  const actual = model.metrics(run), expected = reference.policies[policy];
+const baseline = model.simulate(input);
+const cutoffs = [
+  input.dispatches[2],
+  input.dispatches[2] + input.runningTimes[2][0],
+  input.dispatches[2] + input.runningTimes[2][0] + input.runningTimes[2][1],
+];
+reference.cutoffs.forEach((time, i) => close(time, cutoffs[i]));
+for (const [arrival, origin] of input.trips) assert(arrival < cutoffs[origin]);
+assert(input.trips.some(([arrival, origin]) => origin === 2 && arrival > input.dispatches[2]));
+for (const cap of [0, 20, 40, 60]) {
+  const run = model.simulate(input, cap, true);
+  const actual = model.metrics(run), expected = reference.caps[cap];
   assert.equal(actual.completed, expected.completed);
   assert.equal(actual.school_boarding.length, 3);
   actual.school_boarding.forEach((time, i) => close(time, expected.school_boarding[i]));
-  for (const key of ["platform_wait", "journey_time", "bus2_hold"]) close(actual[key], expected[key]);
+  for (const key of ["platform_wait", "onboard_time", "journey_time", "bus2_hold"]) close(actual[key], expected[key]);
+  const switches = model.caughtBus2(baseline, run);
+  assert.equal(switches.market_switches, expected.market_switches);
+  assert.equal(switches.school_switches, expected.school_switches);
+  for (const rider of run.riders) close(rider.board - rider.arrival + (rider.alight - rider.board), rider.alight - rider.arrival);
   for (const bus of [0, 2]) close(run.visits[bus][1].arrival, run.visits[bus][1].ready);
   for (const [index, route] of run.visits.entries()) {
     const track = busTrack(route, index, [0, 1, 2, 3]);
